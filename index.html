@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>docomo版 乗り換え提案 練習サイト</title>
+<style>
+:root{
+  --ink:#1a1d21;--ink2:#5a6068;--ink3:#9298a0;
+  --bg:#f7f7f5;--surface:#ffffff;--line:#e4e4e0;
+  --sb:#0071c5;--sb-light:#e8f3fc;--ym:#e53935;
+  --ok:#1d9e75;--ng:#d85a30;--warn:#ba7517;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:#fff}
+.b-ym{background:var(--ym)}.b-sb{background:var(--sb)}
+.topbar h1{font-size:16px;font-weight:600;flex:1}
+.topbar .note{font-size:12px;color:var(--ink3)}
+.layout{display:flex;min-height:calc(100vh - 57px)}
+.sidebar{width:300px;min-width:300px;background:var(--surface);border-right:1px solid var(--line);padding:14px 10px;overflow-y:auto;max-height:calc(100vh - 57px);position:sticky;top:57px}
+.sec-label{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.06em;padding:6px 10px 4px}
+.cbtn{display:block;width:100%;text-align:left;background:transparent;border:none;border-left:3px solid transparent;border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer;font-size:13px;color:var(--ink2);line-height:1.45;margin-bottom:2px;font-family:inherit}
+.cbtn:hover{background:var(--bg)}
+.cbtn.on{background:var(--sb-light);color:var(--ink);font-weight:600;border-left-color:var(--sb)}
+.cbtn small{display:block;font-size:11px;font-weight:400;color:var(--ink3)}
+.cbtn .done{color:var(--ok);font-size:11px;font-weight:600}
+.saku{margin:4px 8px 8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;color:var(--ink2)}
+.saku b{color:var(--ink);font-weight:600}
+.main{flex:1;padding:22px 26px;overflow-y:auto;max-width:1150px}
+.case-title{font-size:18px;font-weight:600;margin-bottom:16px}
+h2.sec{font-size:13px;font-weight:600;color:var(--ink2);margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:7px}
+.t-docomo{background:#e8f0fe;color:#1a56db}
+.t-au{background:#fff3cd;color:#92400e}
+    .t-rakuten { background: #fce8f0; color: #8b0030; }
+    .t-uq { background: #e8f8f0; color: #006644; }
+    .t-ahamo { background: #eeeef8; color: #3a3a90; }
+    .t-new { background: #e8f0ff; color: #1a3a8e; }
+.t-sb{background:#dbeafe;color:#1d4ed8}
+.t-rakuten{background:#fce7f3;color:#9d174d}
+.t-uq{background:#d1fae5;color:#065f46}
+.t-iij{background:#ede9fe;color:#5b21b6}
+.t-net{background:#f1f5f9;color:#475569}
+.who{font-size:13px;font-weight:600;margin-bottom:7px}
+.row{display:flex;justify-content:space-between;gap:6px;font-size:12px;margin-bottom:3px}
+.rk{color:var(--ink3);flex-shrink:0}
+.rv{font-weight:500;text-align:right}
+.sub{font-size:11px;color:var(--ink3);margin-top:6px;line-height:1.45;border-top:1px dashed var(--line);padding-top:6px}
+.inforow{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.sbox{flex:1;min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.sbox.warn{border-left:3px solid var(--warn)}
+.stitle{font-size:12px;font-weight:600;margin-bottom:7px}
+.sbody{font-size:13px;color:var(--ink2);line-height:1.7}
+.agrid{display:grid;grid-template-columns:1fr;gap:5px}
+.aitem{font-size:12px;display:flex;align-items:center;gap:6px;color:var(--ink2)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.d-ok{background:var(--ok)}.d-ng{background:var(--ng)}.d-q{background:var(--warn)}
+/* ===== 回答フォーム ===== */
+.azone{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.ahead{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ahtitle{font-size:13px;font-weight:600}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.savestat{font-size:11px;color:var(--ink3)}
+.savestat.ok{color:var(--ok)}
+button.act{font-family:inherit;background:var(--sb);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer}
+button.act:hover{background:#005a9e}
+button.ghost{font-family:inherit;background:transparent;color:var(--ink2);border:1px solid var(--line);border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer}
+button.ghost:hover{background:var(--bg)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.fblock{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+.fblock-title{font-size:12px;font-weight:600;margin-bottom:9px;color:var(--sb)}
+.fl{font-size:11px;color:var(--ink2);margin:7px 0 3px;font-weight:500}
+.fl:first-of-type{margin-top:0}
+select,input[type=number],input[type=text]{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink)}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--sb);box-shadow:0 0 0 2px rgba(0,113,197,.12)}
+.yen{display:flex;align-items:center;gap:4px}
+.yen span{font-size:11px;color:var(--ink3)}
+.reasonarea{padding:14px 16px;border-bottom:1px solid var(--line)}
+.memlabel{font-size:12px;color:var(--ink2);margin-bottom:6px;font-weight:500}
+textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;font-size:13px;font-family:inherit;resize:vertical;min-height:80px;background:var(--surface);color:var(--ink);line-height:1.6}
+/* ===== 解答 ===== */
+.ansarea{padding:14px 16px;border-bottom:1px solid var(--line)}
+.anslabel{font-size:12px;font-weight:600;color:var(--ok);margin-bottom:10px}
+.ansbody,.aibody{font-size:13px;line-height:1.75}
+.ansbody table,.aibody table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.ansbody th,.aibody th{background:var(--bg);padding:7px 9px;text-align:left;font-weight:600;border:1px solid var(--line)}
+.ansbody td,.aibody td{padding:7px 9px;border:1px solid var(--line);vertical-align:top}
+.ansbody h3,.aibody h3{font-size:14px;font-weight:600;margin:16px 0 6px;padding-left:8px;border-left:3px solid var(--sb)}
+.ansbody h3:first-child{margin-top:0}
+.ansbody ul,.aibody ul{padding-left:20px;margin:6px 0}
+.ansbody li,.aibody li{margin-bottom:3px}
+.reason-box{background:#f0f7f1;border:1px solid #cfe5d2;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px}
+.reason-box b{display:block;margin-bottom:5px;color:var(--ok)}
+.point{background:var(--sb-light);border-radius:8px;padding:11px 14px;margin-top:12px;font-size:12px}
+.point b{display:block;margin-bottom:4px}
+.caution{font-size:11px;color:var(--ink3);margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
+.loading{display:flex;align-items:center;gap:8px;color:var(--ink2);padding:10px 0;font-size:13px}
+.dots{display:inline-flex;gap:4px}
+.dots span{width:6px;height:6px;border-radius:50%;background:var(--sb);animation:bk 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes bk{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.hint{font-size:12px;color:var(--ink3);text-align:center;padding:4px 0 30px}
+.err{color:var(--ng);font-size:13px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center;padding:20px 12px}
+.modal-box{background:var(--surface);border-radius:14px;width:100%;max-width:860px;margin:auto;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--bg)}
+.modal-head h2{font-size:15px;font-weight:600}
+.modal-tabs{display:flex;gap:4px;overflow-x:auto;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--bg)}
+.modal-tab{flex-shrink:0;font-family:inherit;font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:16px;background:var(--surface);cursor:pointer;color:var(--ink2)}
+.modal-tab.on{background:var(--sb);color:#fff;border-color:var(--sb)}
+.modal-body{padding:16px}
+.edit-label{font-size:12px;font-weight:600;color:var(--ink2);margin:14px 0 5px}
+.edit-label:first-child{margin-top:0}
+.edit-ta{width:100%;min-height:130px;border:1px solid var(--line);border-radius:8px;padding:11px;font-size:13px;font-family:inherit;resize:vertical;background:var(--surface);color:var(--ink);line-height:1.6}
+.edit-ta:focus{outline:none;border-color:var(--sb);box-shadow:0 0 0 3px rgba(0,113,197,.1)}
+.modal-foot{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line);background:var(--bg)}
+.edit-stat{font-size:12px;color:var(--ink3);flex:1}
+.edit-stat.custom{color:var(--warn);font-weight:600}
+.edit-section{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.edit-section-title{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--sb)}
+.edit-phone-block{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px}
+.edit-row{display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.edit-row label{font-size:11px;color:var(--ink2);display:block;margin-bottom:3px}
+.edit-row .ef{flex:1;min-width:110px}
+.edit-row input{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit}
+.edit-area-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.edit-area-row input[type=text]{flex:1;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px}
+.edit-area-row select{border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px}
+.edit-quiz-block{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px}
+.edit-quiz-block textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px;font-size:12px;font-family:inherit;min-height:50px}
+.btn-tiny{font-family:inherit;font-size:11px;padding:4px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;color:var(--ink2)}
+.btn-tiny:hover{background:var(--bg)}
+.btn-tiny.danger{color:var(--ng);border-color:var(--ng)}
+.report-case{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:16px}
+.report-case h3{font-size:14px;margin-bottom:10px;padding-left:8px;border-left:3px solid var(--sb)}
+.report-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}
+.report-table th,.report-table td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.report-table th{background:var(--bg);white-space:nowrap}
+.empty{color:var(--ink3);font-style:italic}
+.fb-ok{color:var(--ok);font-weight:600}
+.fb-ng{color:var(--ng);font-weight:600}
+.report-reason{font-size:12px;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:8px;line-height:1.6;white-space:pre-wrap}
+.report-quiz{font-size:12px}
+.report-quiz ul{padding-left:18px;margin:6px 0}
+.report-quiz li{margin-bottom:4px;line-height:1.5}
+.report-summary{background:var(--sb-light);border-radius:10px;padding:14px;margin-bottom:16px}
+.report-summary h2{font-size:15px;margin-bottom:8px}
+.report-summary table{width:100%;font-size:12px;border-collapse:collapse}
+.report-summary td{padding:4px 8px}
+.report-empty{color:var(--ink3);text-align:center;padding:40px 0;font-size:13px}
+@media print{
+  body *:not(#reportModal):not(#reportModal *){display:none !important}
+  #reportModal{display:block !important;position:static !important;background:none !important;padding:0 !important}
+  #reportModal .modal-box{box-shadow:none !important;max-width:100% !important;border-radius:0 !important}
+  #reportModal .modal-head,#reportModal .modal-foot{display:none !important}
+  .report-case{break-inside:avoid}
+}
+.qitem{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.qtext{font-size:13px;margin-bottom:7px;line-height:1.55}
+.qbtns{display:flex;gap:8px}
+.qbtn{font-family:inherit;width:44px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:16px;cursor:pointer;color:var(--ink2)}
+.qbtn:hover{border-color:var(--sb)}
+.qbtn.qsel{background:var(--sb);color:#fff;border-color:var(--sb)}
+.qres{font-size:12px;margin-top:7px;line-height:1.55;padding:7px 10px;border-radius:6px}
+.qok{background:#e8f5ec;color:var(--ok)}
+.qng{background:#fdeeea;color:var(--ng)}
+.ansbody{overflow-x:auto}
+@media(max-width:760px){
+  .layout{flex-direction:column}
+  .topbar{padding:10px 14px;position:static}
+  .topbar h1{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .note{display:none}
+  .sidebar{width:100%;min-width:0;border-right:none;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;padding:8px;position:static;max-height:none}
+  .sidebar .sec-label,.sidebar .saku{display:none}
+  .cbtn{white-space:nowrap;border-left:none;border-bottom:3px solid transparent;border-radius:8px 8px 0 0}
+  .cbtn.on{border-left:none;border-bottom-color:var(--sb)}
+  .main{padding:14px}
+  .formgrid{grid-template-columns:1fr}
+  select,input[type=number],input[type=text],textarea{font-size:16px;padding:10px}
+  button.act,button.ghost{padding:10px 16px;font-size:14px}
+  .qbtn{width:52px;height:44px}
+  .ansbody table{min-width:540px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge" style="background:#cc0000">docomo</span>
+  <h1>docomo版 乗り換え提案 練習サイト</h1>
+  <span class="note" style="white-space:nowrap">docomo着地版 2026年8月施策反映</span>
+  <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openEditor()">✏️ 解答編集</button>
+  <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openReport()">📋 回答まとめ</button>
+  <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openKnowledge()">💡 知識チェック</button>
+</div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+var cur = -1;
+var showAns = {};
+var memCache = {};      // ストレージ不可時のフォールバック
+var saveTimer = null;
+var storageOK = (typeof window.storage === 'object' && window.storage && typeof window.storage.set === 'function');
+
+var PLAN_OPTS = ['（未選択）','変更なし・持ち込み','ドコモ MAX（無制限／U22割適用時は30GB）','ドコモ ポイ活MAX（無制限）','ドコモ ポイ活20（20GB）','ドコモ mini 6GB','ドコモ mini 12GB','ahamo（40GB）','ahamo大盛り（120GB）','スマホデビューU15（〜5GB）','スマホデビューU15（5〜20GB）','キッズケータイ','その他（施策欄に記入）'];
+var CALL_OPTS = ['（通話なし）','5分かけ放題','10分かけ放題','24時間かけ放題'];
+var CARD_OPTS = ['（未選択）','つけない','dカード（ノーマル）','dカードGOLD'];
+var NET_OPTS  = ['（未選択）','変更なし','ドコモ光 1ギガ（マンション）','ドコモ光 1ギガ（戸建て）','ドコモ光 10ギガ','home 5G','ドコモでんき（新規）','その他'];
+var KOUJI_OPTS = ['（未選択）','工事あり','工事なし','工事不要（home5G）'];
+var KOUJITYPE_OPTS = ['（未選択）','事業者変更（事変）','転用'];
+var HOTEN_OPTS = ['（未選択）','補填あり（あんしん乗り換え等）','補填なし','対象外（違約金・残債なし）'];
+var NETSAKU_OPTS = ['（未選択）','CBなし','開通後20,000円（セブン銀行）','その他','なし'];
+var HOW_OPTS  = ['（未選択）','事業者変更（事変）','解約新規','新規','転用','変更なし'];
+
+
+/* ============ 解答データ（構造化形式） ============ */
+// 各ケースの解答はパターンの配列。パターンは {title, reason, phones:[{who,plan,min,disc,saku}], net:{plan,fee,how,saku}, points} の構造
+// phones配列はCASES[i].phonesと同順。フォームから編集可能。
+
+var ANS_DATA = [{"patterns":[{"title":"パターンA：父ahamo＋母ドコモmini＋子ahamo＋でんきCB","reason":"父はスマホスタートプラン終了で高くなっているため安さ優先でahamo。母は少量でmini。子（22歳）はahamoでCB15,000円。でんき乗り換えCB10,000円も提案。","phones":[{"plan":"ahamo（40GB）","min":"2,970円","disc":"（みんなドコモ割カウントのみ・セット割なし）","saku":"CB15,000円（1か月後・セブン銀行）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"光セット割▲1,210円＋dカードGOLD▲550円＋でんきセット割▲110円","saku":"CB10,000円（1か月後・セブン銀行）"},{"plan":"ahamo（40GB）","min":"2,970円","disc":"（みんなドコモ割カウントのみ・セット割なし）","saku":"CB15,000円（1か月後・セブン銀行）"}],"net":{"plan":"ドコモ光 1ギガ（戸建て）","fee":"5,720円（光TV990円＋固定電話550円別途）","how":"事業者変更（BIGLOBE光→ドコモ光・NTT発番引継可）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）"},"points":"・au 2年返却プログラム22ヶ月目の父：端末はそのまま持ち込みでMNPのみ\n・子のiPhone15（36回払い残14回）：端末持ち込みでMNPのみ（残債は支払い継続）\n・母のauPAYゴールド→dカードGOLD新規提案でCB10,000pt\n・NetflixパックはauのみのためMNP後は別途Netflix契約（2,200円〜）が必要→事前説明必須\n・auでんき→ドコモでんきGreenへ変更でCB10,000pt\n・父の@ezweb.ne.jpメール：乗り換え前にIDとパスワードを控えて引き継ぐかどうかをヒアリング。引き継ぐ場合は毎月330円をau側に支払い（クレジットカードのみ対応）→カード有無も必ずヒアリング\n・固定電話（NTT発番）の番号引き継ぎ時の事務手数料：2,200円が発生\n・事業者変更（事変）の場合は光テレビの工事は不要"}]},{"patterns":[{"title":"パターンA：父ドコモMAX（U22利用者登録）＋母ドコモMAX（U22）＋子①mini＋子②U15＋子③キッズ＋でんき","reason":"父母ともU22割（子①14歳を利用者登録）で7か月実質0円。5回線でみんなドコモ割フル適用。子②Android新規はU15プラン。子③キッズケータイ新規。でんき乗り換えCB10,000pt。","phones":[{"plan":"ドコモ MAX（U22）・30GB","min":"0円（U22割7か月）→その後5,368円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円＋U22割（7か月）","saku":"CB20,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）→その後5,368円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円＋U22割（7か月）","saku":"CB20,000円（1か月後・セブン銀行）"},{"plan":"ドコモ mini 4GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"端末：Galaxy A25 一括1円（MNP/新規）"},{"plan":"キッズケータイ","min":"550円＋イマドコサーチ330円＝880円/月","disc":"","saku":"端末一括3,960円"}],"net":{"plan":"ドコモ光 10ギガ（戸建て）＋光テレビ","fee":"6,380円＋光テレビ990円＋専用ルーター550円＝7,920円","how":"解約新規（SoftBank光10G→ドコモ光10G）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）。光テレビはお客様負担・別途工事費発生（基本3,300円＋接続7,150円＋視聴サービス3,080円＝13,530円）"},"points":"・U22利用者登録：子①（14歳）を父・母の回線に各1回線登録→父母それぞれにU22割（7か月）適用\n・キッズケータイとU22は同一利用者登録可能（U15との同一登録は不可）。\n・SB光10G工事費残債→SB解約金・残債補填スキーム先に確認（dポイント最大10万pt補填）\n・Netflixパック（SB独自）はMNP後に別途Netflix契約が必要→事前説明必須\n・父のPayPayカードGOLD→dカードGOLDへの切替提案\n・東京電力→ドコモでんきGreenへ変更でCB10,000pt\n・光テレビはお客様負担・別途工事費発生：基本3,300円＋接続7,150円＋視聴サービス3,080円＝13,530円"}]},{"patterns":[{"title":"パターンA：ahamo（24時間かけ放題）＋home5G＋でんきBasic","reason":"かけ放題ニーズあり。楽天ハンド5G持ち込みでahamoへSIMのみ乗り換え。引越し直後でWi-Fiなし→home5G新規。でんきCBも積み上げ。","phones":[{"plan":"ahamo（40GB）＋24時間かけ放題（＋1,100円）","min":"4,070円","disc":"（1回線のみ・みんなドコモ割対象外）","saku":"CB15,000円（1か月後・セブン銀行）"}],"net":{"plan":"home5G（新規）","fee":"5,280円","how":"新規（工事不要）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）"},"points":"・楽天ハンド5G：SIMロック解除確認必須（持ち込みMNP）\n・home5G本体代：73,260円→24か月利用で月々割引により実質負担なし\n・東京電力→ドコモでんきBasicへ変更でCB10,000pt\n・1回線のみのためみんなドコモ割は対象外（2回線目ができたときに適用）"}]},{"patterns":[{"title":"パターンA：父ahamo＋母ドコモMAX（U22利用者登録：子②11歳）＋子①ドコモMAX（U22）＋子②U15＋でんき","reason":"父はahamo（5分通話無料付き・40GB）でシンプルに。母はU22割（11歳の子②を利用者登録）で7か月0円。子①（14歳）もU22適用。子②（11歳・在留資格）はU15プラン新規。","phones":[{"plan":"ahamo（40GB）","min":"2,420円（U15親子割▲550円）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"CB15,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt。iPhone17（買い時プログラム・カエドキ1円・頭金16,500円・特典利用料あり）"},{"plan":"ドコモ MAX（無制限）","min":"1,210円（U22割7か月）→割引終了後6,578円","disc":"U22割（7か月）＋みんなドコモ割▲1,210円＋dカードGOLD▲550円＋でんき▲110円（光セット割なし・Wi-Fi管理費込みのため）","saku":"CB20,000円（1か月後・セブン銀行）。iPhone17（買い時プログラム・カエドキ1円・頭金16,500円・特典利用料あり）"},{"plan":"ドコモ MAX（無制限）","min":"1,210円（U22割7か月）→割引終了後6,578円","disc":"U22割（7か月）＋みんなドコモ割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone16（買い時プログラム・カエドキ1円・特典利用料あり・頭金なし）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"Galaxy A25 一括1円（MNP/新規）。在留カード確認必須"}],"net":{"plan":"マンション管理費込みWi-Fi（変更なし）","fee":"0円（変更なし）","how":"変更なし","saku":"auでんき→ドコモでんきGreenへ変更でCB10,000pt（開通後）"},"points":"・父母のiPhone16e（48回払い21ヶ月目・返却プログラム）：端末返却後にiPhone17へ。または端末持ち込みでMNP\n・子②（11歳・在留資格2年半）：在留カード確認必須\n・U22利用者登録：子②（11歳）を母の回線に登録→母にU22割7か月適用\n・マンション管理費込みWi-FiのためドコモMAXに光セット割は適用不可\n・auでんき→ドコモでんきGreenでCB10,000pt"}]},{"patterns":[{"title":"パターンA：父ahamo継続（U15親子割）＋母ドコモMAX（U22：子登録）＋子スマホデビューU15新規","reason":"父はahamo継続（変更不要・dカードGOLD新規でCB）。子をU15＋U22に同時登録→母のドコモMAXにU22割7か月適用。子はスマホデビューU15でiPhone17（カエドキ1円・頭金16,500円）。母はカード増やしたくない意向だがdカードGOLDが必須条件のため丁寧な説明が必要。","phones":[{"plan":"ahamo（40GB）（継続）","min":"2,420円（U15親子割▲550円・最大12か月）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"dカードGOLD新規CB10,000pt（審査完了後）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（子をU15＋U22同時登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone17（カエドキ1円・初回11円・頭金16,500円・特典利用料あり）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"U15親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"iPhone17 256GB（カエドキ1円・初回11円・頭金16,500円・特典利用料あり）CB20,000円（1か月後・セブン銀行）"}],"net":{"plan":"ドコモ光（父名義・既契約・変更なし）","fee":"4,400円","how":"変更なし","saku":"既契約のため光CBなし（光セット割はすぐ適用）"},"points":"・子をU15利用者登録＋U22利用者登録の両方に同時登録→母の回線にU22割7か月適用（申込時に子の本人確認書類必須）\n・父のahamo：みんなドコモ割カウント対象（割引は受けられないが3回線カウントに入る）\n・母はクレジットカードを増やしたくない意向→dカードGOLD加入の必要性（U22割適用の条件・割引額・CB）を丁寧に説明\n・母のiPhone14 Pro（バッテリー78%）→iPhone17（カエドキ1円・頭金16,500円・特典利用料あり）を提案\n・Y!mobile親子割残6か月分の違約金（撤去）スキーム確認\n・母はPayPayカードノーマル所持→dカードGOLD加入の必要性を丁寧に説明（カード増やしたくない意向あり）"}]},{"patterns":[{"title":"パターンA：祖父dカードGOLD追加＋でんき変更／娘ドコモMAX（U22）＋iphone16／孫ドコモmini","reason":"祖父はirumo継続・dカードGOLD新規のみ。でんき東京電力→ドコモでんきGreenでCB。娘はU22割（孫13歳を利用者登録）で7か月0円。孫はドコモminiで880円着地。娘宅J:COM→ドコモ光解約新規。","phones":[{"plan":"irumo（変更なし）","min":"880円（変更なし）","disc":"dカードGOLD追加でカード割（▲550円）→880円のまま（irumoは光セット割なし）","saku":"dカードGOLD新規CB10,000pt（審査完了後）。でんきCB10,000pt（開通後）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（孫13歳を利用者登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone16（カエドキ1円・MNPのみ・特典利用料あり・頭金なし）。Netflixスタンダード1,590円/月＋Amazonプライム600円/月が別途発生（MNP後のNetflixパック終了のため事前説明必須）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）"}],"net":{"plan":"祖父宅：ドコモ光（変更なし）／娘宅：ドコモ光 1ギガ（戸建て）＋J:COMテレビ継続","fee":"娘宅：ドコモ光5,720円＋J:COMテレビ6,074円＋HDD880円＋固定電話550円＝13,224円","how":"娘宅：解約新規（J:COM→ドコモ光。NTT発番のため固定電話番号引継可・550円/月）","saku":"娘宅：CB20,000pt（開通後・店舗受取）。J:COM解約金補填：dポイント最大100,000pt。光の工事費：28,600円"},"points":"・孫（13歳）をU22利用者登録→娘の回線に適用（申込時に孫の本人確認書類必須）\n・別居家族グループには健保・戸籍謄本などの家族確認書類が必須\n・娘のiPhone15（買い時プログラム22ヶ月目・月1円）：返却可能時期を確認してから新端末提案\n・NetflixパックはauのためMNP後は別途契約必要→事前説明\n・J:COM解約撤去工事費が発生（補填対象か確認）\n・祖父宅東京電力→ドコモでんきGreenでCB10,000pt（月々550円増）"}]},{"patterns":[{"title":"パターンA：夫ahamo大盛り＋妻ドコモMAX（U22：子9歳登録）＋子ドコモmini＋でんき","reason":"夫は50GB利用でahamo大盛り（120GB・4,950円）が最適。妻はU22割（子9歳を利用者登録）で7か月0円。子（9歳）はドコモmini 4GBで880円。dカードGOLD・でんきCBも積み上げ。","phones":[{"plan":"ahamo大盛り（120GB）","min":"4,400円（U15親子割▲550円）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"CB15,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt。端末：iPhone17 Pro そのまま継続（月415円・返却プログラム12ヶ月目）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（子9歳を利用者登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。端末：Galaxy S26 そのまま継続（月1円・残38回）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）。端末：arrows we2 そのまま継続"}],"net":{"plan":"ドコモ光 1ギガ（戸建て）＋光テレビ＋固定電話","fee":"5,720円＋固定電話550円＋光テレビ990円＝7,260円","how":"事業者変更（SoftBank光→ドコモ光。SB発番→NTT発番に変わるため番号変更に注意）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）。固定電話手数料2,200円。SB光解約金・SBでんき解約金発生の可能性あり→事前確認"},"points":"・子（9歳）をU22利用者登録→妻の回線にU22割7か月適用（申込時に子の本人確認書類必須）\n・キッズケータイではなくドコモminiのため子のU22登録は可能（キッズケータイ×U22は禁止）\n・SB光→ドコモ光事変：SB発番のため固定電話番号は変わる可能性あり（事前説明必須）\n・光テレビはそのまま継続（別途工事費なし）\n・SBでんき解約金が発生する可能性→事前確認\n・夫のPayPayカードGOLD→dカードGOLDへ切替提案"}]}];
+
+var CASES = [{"name":"1. au家族3人","sub":"au3人→docomo集約","title":"ケース1｜au家族3人","phones":[{"who":"父（60代）","tag":"t-au","label":"au","plan":"スマホスタートプラン","usage":"25GB","fee":"4,136円","device":"Galaxy A55（2年返却プログラム利用中・22ヶ月目）","dfee":"0円（返却前提）"},{"who":"母（50代）","tag":"t-au","label":"au","plan":"スマホミニプラン（3GBまで）","usage":"3GB","fee":"2,398円","device":"Xperia 10Ⅵ（3年前一括購入）","dfee":"0円"},{"who":"子（22歳）","tag":"t-au","label":"au","plan":"使い放題MAX","usage":"40GB","fee":"5,228円","device":"iPhone15 128GB（36回払い・22ヶ月目）","dfee":"2,200円/月（残14回）"}],"net":{"name":"BIGLOBE光","type":"戸建て","speed":"最大1Gbps","fee":"5,478円","tel":"あり（NTT発番・550円/月）","tv":"あり（990円/月）","cost":"工事費残債なし","debt":"なし","note":"名義：母。合計7,018円/月"},"special":"父はガラケーからスマホ変更時にauへ。以前はdocomo利用。現在2年返却プログラム利用中（22ヶ月目）。auメール（@ezweb.ne.jp）を利用中。乗り換え前にIDとパスワードを控えて引き継ぐかどうかをヒアリングすること。引き継ぐ場合は毎月330円をau側に支払う。クレジットカードのみ対応可能なのでそこもヒアリング必須。母はずっとau・他社乗り換え経験なし・auPAYゴールドカード利用中・auキャリアメール（@au.com/@ezweb.ne.jp）利用中→乗り換え前にIDとパスワードを控えて引き継ぐかどうかヒアリング必須（引き継ぐ場合は月330円・クレジットカードのみ対応）・家族全員の支払いを母が行っている。子は36回分割・端末代は母が支払い。固定回線はBIGLOBE光（NTT発番・光テレビあり）。auでんき利用中→でんきCB10,000ptも提案。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"2. SB家族5人","sub":"SB5人→docomo集約","title":"ケース2｜SoftBank家族5人","phones":[{"who":"父（40代）","tag":"t-sb","label":"SoftBank","plan":"ペイトク無制限","usage":"30GB","fee":"7,128円","device":"Pixel 9 128GB（一括済）","dfee":"0円"},{"who":"母（40代）","tag":"t-sb","label":"SoftBank","plan":"テイガク無制限","usage":"20GB","fee":"5,148円","device":"iPhone16（返却プログラム・月3,600円）","dfee":"3,600円/月（残債あり）"},{"who":"子①（14歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン","usage":"3〜4GB","fee":"2,596円","device":"iPhone SE3（母のお下がり・4年以上使用）","dfee":"0円"},{"who":"子②（未持ち）","tag":"t-new","label":"未持ち","plan":"なし","usage":"なし","fee":"なし","device":"Android希望","dfee":"なし"},{"who":"子③（未持ち）","tag":"t-new","label":"未持ち","plan":"なし","usage":"なし","fee":"なし","device":"キッズケータイ希望","dfee":"なし"}],"net":{"name":"SoftBank光（10ギガ・戸建て・父名義）","type":"戸建て","speed":"最大10Gbps","fee":"9,950円（基本6,380円＋HGW550円＋BBユニット550円＋光テレビ990円＋Netflixスタンダード1,480円）","tel":"なし","tv":"あり（SoftBank光テレビ・990円/月）","cost":"工事費残債 23,760円","debt":"残債あり（23,760円）","note":"父名義。NetflixパックはSoftBankでのみ提供のため乗り換え後は別途契約に。父PayPay月8万円・PayPayカードGOLD利用中"},"special":"父はSoftBank2年前から。PayPay月8万円利用のためペイトクプランに加入。子①はiPhone SE3（バッテリー78%・お下がり）。子②はAndroid新規希望、子③はキッズケータイ希望。SB光工事費残債あり→SB光解約金・残債補填スキーム確認必須。でんき東京電力利用中→でんきCB提案。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"3. 楽天単身","sub":"楽天→ahamo+home5G","title":"ケース3｜楽天単身","phones":[{"who":"単身男性（30代）","tag":"t-rakuten","label":"楽天mobile","plan":"最強プラン（無制限）","usage":"130GB","fee":"3,278円","device":"楽天ハンド5G（一括購入済み）","dfee":"0円"}],"net":{"name":"なし（引越し直後・Wi-Fiなし）","type":"マンション","speed":"なし","fee":"0円","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"引越し前の光回線は解約済み。名義：本人"},"special":"以前auを利用。通話無料・安さで楽天へ変更。現在電波が悪い・通話が途切れることにストレスを感じている。引越し直後でWi-Fi環境なし。光を検討中。NTT回線ありとのこと。24時間かけ放題ニーズあり。東京電力利用中→でんきCB提案。SIMロック解除確認必須（楽天端末）。","area":[[true,"docomo 5G"],[true,"LTE"],[true,"home5G判定"]],"decisionLog":""},{"name":"4. UQ家族4人（U15×2）","sub":"UQ4人→docomo集約","title":"ケース4｜UQモバイル家族4人","phones":[{"who":"父（40代）在留外国人(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン（通話パック60・親子割）","usage":"20GB/30GB","fee":"1,738円（通話パック60）","device":"iPhone 16e 128GB（48回払い・21ヶ月目・返却プログラム）","dfee":"月々2円（残27回）"},{"who":"母（40代）在留外国人(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン（親子割加入中）","usage":"10GB/30GB","fee":"1,078円（親子割加入）","device":"iPhone 16e 128GB（48回払い・21ヶ月目・返却プログラム）","dfee":"月々2円（残27回）"},{"who":"子①（14歳）(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン","usage":"4GB/30GB","fee":"1,078円（親子割10ヶ月目）","device":"iPhone SE3（母のお下がり・バッテリー78%）","dfee":"0円"},{"who":"子②（11歳・在留資格2年半保有）","tag":"t-new","label":"未契約","plan":"なし","usage":"なし","fee":"なし","device":"端末ニーズあり","dfee":"なし"}],"net":{"name":"マンション管理費込みWi-Fi","type":"マンション","speed":"なし","fee":"0円（管理費込み）","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"Wi-Fi変更なし。auでんき利用中→でんきCB提案"},"special":"父はauとUQを行き来。10ヶ月前にauからUQへ乗り換え。父母ともiPhone 16e（48回払い21ヶ月目・返却プログラム）。子①はiPhone SE3お下がり。子②は11歳で在留資格2年半保有（在留カード確認必須）。マンションWi-Fi管理費込みで変更不要。auでんき利用中→ドコモでんきGreenへ変更提案。","area":[[true,"docomo 5G"],[true,"LTE"]],"decisionLog":""},{"name":"5. 3人家族・母だけ変えたい","sub":"ahamo+YM→docomo集約","title":"ケース5｜ahamo＋SoftBank家族","phones":[{"who":"父（50代）","tag":"t-ahamo","label":"ahamo","plan":"ahamo（30GB）","usage":"18GB","fee":"2,970円（現在0円・一括購入済み）","device":"Galaxy S24 128GB（バッテリー84%）","dfee":"0円（一括購入済み）"},{"who":"母（40代）","tag":"t-ym","label":"Y!mobile","plan":"シンプル2 M（30GB）","usage":"19GB","fee":"2,948円（基本4,378円・親子割6/12か月目）","device":"iPhone14 Pro 128GB（バッテリー78%）","dfee":"0円"},{"who":"子（未持ち）","tag":"t-new","label":"未持ち","plan":"なし（初めてのスマホ）","usage":"なし","fee":"なし","device":"iPhone希望","dfee":"なし"}],"net":{"name":"ドコモ光（父名義・既契約）","type":"マンション","speed":"最大1Gbps","fee":"4,400円","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"光テレビなし・固定電話なし。継続利用"},"special":"父はahamo（dカード不所持）継続。母はY!mobileシンプル2 M・親子割6か月目（残6か月）・クレジットカードを増やしたくない意向・PayPayカードノーマル所持・端末を新しくしたい希望。子は未持ちでiPhone希望・新規。ドコモ光は父名義で既契約（セット割すぐ適用可）。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"6. docomo＋au＋SB 3世代家族","sub":"3世代→docomo集約","title":"ケース6｜docomo＋au＋SB 3世代家族","phones":[{"who":"祖父（70代）","tag":"t-docomo","label":"docomo","plan":"irumo（9GBまで段階式）","usage":"3GB","fee":"880円","device":"らくらくフォン 64GB（バッテリー90%・3年前一括購入）","dfee":"0円"},{"who":"娘（40代）","tag":"t-au","label":"au","plan":"使い放題MAX 5G（Netflixパック込み）","usage":"20GB","fee":"7,106円","device":"iPhone15（買い時プログラム48回払い・22ヶ月目）","dfee":"月々1円（残26回）"},{"who":"孫（13歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン","usage":"20GB","fee":"3,916円","device":"iPhone XR（母のお下がり・バッテリー75%）","dfee":"0円"}],"net":{"name":"ドコモ光（1ギガ戸建て・祖父名義）","type":"戸建て","speed":"最大1Gbps","fee":"5,720円＋固定電話550円＝6,270円","tel":"あり（550円/月）","tv":"なし","cost":"なし","debt":"なし","note":"祖父宅。祖父名義"},"special":"祖父はirumo（880円）利用中・dカードノーマル。娘はau使い放題MAX＋Netflixパック（Netflix1,590円/月＋Amazonプライム600円/月→乗り換え後の別途契約要確認）・auPAYカードゴールド利用中・買い時プログラム22ヶ月目。孫（13歳）はSoftBankスマホデビュープラン・iPhone XRお下がり（バッテリー75%）。娘宅はJ:COM→ドコモ光へ解約新規（NTT発番のため番号引継可・撤去工事費発生）。別居家族グループ構成には家族確認書類必須。祖父宅東京電力→でんきCB提案。","area":[[true,"docomo 5G"],[true,"LTE"]],"net2":{"name":"J:COM（ケーブルテレビ・娘名義）","type":"戸建て","speed":"最大300Mbps","fee":"テレビ・ネット9,680円＋固定電話1,903円＋HDD880円＝12,463円","tel":"あり（J:COM・1,903円/月）","tv":"なし（ケーブルTV）","cost":"J:COM解約費用発生（撤去工事費別途）","debt":"なし","note":"娘宅。娘名義。auでんき・太陽光発電設備あり。別居のため家族確認書類（健保・戸籍謄本等）が必要"}},{"name":"7. SB夫婦+U15子","sub":"SB夫婦→docomo","title":"ケース7｜SB夫婦＋U15子（9歳）","phones":[{"who":"夫（40代）","tag":"t-sb","label":"SoftBank","plan":"ペイトク2（無制限）","usage":"50GB","fee":"7,678円","device":"iPhone17 Pro 256GB（バッテリー95%）","dfee":"415円/月（10ヶ月目）"},{"who":"妻（40代）","tag":"t-sb","label":"SoftBank","plan":"テイガク無制限","usage":"25GB","fee":"5,148円","device":"Galaxy S26（48回払い・10ヶ月目）","dfee":"1円/月（残38回）"},{"who":"子（9歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン＋","usage":"2GB/4GB","fee":"1,978円","device":"arrows we2（一括1円・10ヶ月）","dfee":"0円"}],"net":{"name":"SoftBank光（1ギガ戸建て・夫名義）","type":"戸建て","speed":"最大1Gbps","fee":"5,720円＋BBユニット650円＋固定電話550円＋光テレビ990円＝7,910円","tel":"あり（SoftBank光でんわ・SB発番）","tv":"あり（SoftBank光テレビ・990円/月）","cost":"解約金発生（要確認）","debt":"なし","note":"夫名義。SoftBankでんき利用中（2025年6月開始・Y!mobile時代から）。解約金発生の可能性あり"},"special":"夫は1年前にauからSBへ乗り換え。PayPay月3万円・PayPayカードGOLD利用中。iPhone17 Pro返却プログラム12ヶ月目（端末月415円）。妻はGalaxy S26（48回払い10ヶ月目）。子9歳はarrows we2（一括1円）。SB光→ドコモ光事変（NTT発番のため固定電話番号引継可・光テレビ継続・別途光テレビ工事費なし）。SBでんき→でんき解約金発生の可能性あり。dカードGOLD提案でCB10,000pt。乗り換えに抵抗なし・お得だと感じればやる意向。","area":[[true,"docomo 5G"],[true,"LTE"]]}];
+
+var QUIZ_PER_CASE = [
+  [
+    {
+      "q": "スマホスタート割のような入会時期間限定割引は、対象期間が終了すると自動的に満額請求に戻る",
+      "a": true,
+      "exp": "期間限定の新規/乗り換え割引は対象期間終了後は適用外となり、以降は割引前の基本料金が請求される（使い放題MAX+は7,788円）"
+    },
+    {
+      "q": "固定電話番号の発番元（NTT発番か光電話発番か）によって、事業者変更時の番号の引き継ぎ方法が異なる場合がある",
+      "a": true,
+      "exp": "発番元により手続き・引き継が可否の扱いが異なることがあるため、契約前に発番元を必ず確認する"
+    },
+    {
+      "q": "みんなドコモ割は3回線以上で各回線▲1,210円（税込）の割引が適用される",
+      "a": true,
+      "exp": "3回線以上で各回線に▲1,210円が適用。ドコモ光既存なら光セット割も重複適用可"
+    },
+    {
+      "q": "auの端末残債があってもMNP（他社乗り換え）は可能である",
+      "a": true,
+      "exp": "残債があってもMNPは可能。ただし残債の支払い義務は続く（消えない）"
+    },
+    {
+      "q": "ドコモでんきを新規開通すると開通後CB10,000円＋でんきセット割（▲110円/回線）が適用される",
+      "a": true,
+      "exp": "でんきCB10,000円＋ファミリー割引グループ内の対象プラン各回線に▲110円のセット割が適用"
+    }
+  ],
+  [
+    {
+      "q": "SoftBankのメールアドレス（@i.softbank.jp等）を他社へMNPした後も継続して使いたい場合、事前にID・パスワードを控えておく必要がある",
+      "a": true,
+      "exp": "MNP後もSoftBankメールを継続利用する場合は乗り換え前に会員ID・パスワードを控えておく必要がある。複数メールアドレスを持つ場合はどれを継続したいか事前確認も必要"
+    },
+    {
+      "q": "キッズケータイとドコモU22割は同一の利用者に重複登録できる",
+      "a": false,
+      "exp": "キッズケータイとU22割の同一利用者登録は禁止。キッズケータイ＋U15は可能"
+    },
+    {
+      "q": "キッズケータイの通信費は550円（税込）、端末一括価格は3,960円（税込）である",
+      "a": true,
+      "exp": "キッズケータイはシンプルな料金体系。端末一括3,960円で手軽に提案できる"
+    },
+    {
+      "q": "スマホデビュープランU15はdカードお支払割と親子割を適用すると1年目858円から利用できる",
+      "a": true,
+      "exp": "親子割（最大12か月）＋dカードお支払割▲550円で最安858円。2年目以降は通常料金"
+    },
+    {
+      "q": "SoftBankで使っていたLYPポイント・LYP IDは、他社へのMNP後も手続き不要で自動的に引き継がれる",
+      "a": false,
+      "exp": "LYPポイント・IDは自動引継されないため、事前にID・パスワードの控えや移行手続きの確認が必要"
+    }
+  ],
+  [
+    {
+      "q": "home 5GはドコモMAXにドコモ光セット割と同額の▲1,210円（税込）のセット割が適用される",
+      "a": true,
+      "exp": "home 5Gセット割もドコモ光セット割と同額の▲1,210円。光工事不要ですぐ設置できる"
+    },
+    {
+      "q": "楽天モバイル端末はSIMロック解除なしでdocomoのSIMをそのまま使える",
+      "a": false,
+      "exp": "楽天モバイル端末はSIMロック解除が必要。持ち込み前に必ず確認すること"
+    },
+    {
+      "q": "ドコモMAXを新規1回線のみ契約した場合、みんなドコモ割（3回線以上）は適用される",
+      "a": false,
+      "exp": "みんなドコモ割は3回線以上が条件。1回線のみでは対象外（2回線は▲550円）"
+    },
+    {
+      "q": "ドコモでんきを新規開通すると開通後にCBとして10,000円受け取れる",
+      "a": true,
+      "exp": "でんきCB10,000円は開通後に受け取り。home5G＋MAX新規と合わせてCBを積み上げる"
+    },
+    {
+      "q": "過去にdカードGOLDを保有し解約した顧客が再度新規申込する場合も、初めて申込む顧客と同様に新規CB10,000円の対象になり得る",
+      "a": true,
+      "exp": "過去の解約歴があっても再度の新規申込として扱われればCB10,000円の対象になり得る。ただし再度の入会審査は必要（年会費11,000円との比較で提案判断）"
+    }
+  ],
+  [
+    {
+      "q": "ドコモ親子割（U15）はスマホデビュープランU15の契約者本人に最大12か月間割引が適用される",
+      "a": true,
+      "exp": "子本人に最大12か月間▲1,100円〜1,870円。dカードお支払割と合わせると858円〜"
+    },
+    {
+      "q": "ドコモ親子割（家族）は親がドコモ MAX/ポイ活MAX/ahamoのいずれかを契約していることが条件である",
+      "a": true,
+      "exp": "親がこの3プランのいずれかを契約することで親にも▲550円が最大12か月適用"
+    },
+    {
+      "q": "在留資格を持つ子をSIM単体で新規契約する場合、在留カードとマイナンバーカード（または運転免許証＋クレジットカード）があれば、在留期間に関係なく契約できる",
+      "a": false,
+      "exp": "SIM単体契約でも在留期間3か月以上が必要。端末込みなら在留期間26か月以上が必要"
+    },
+    {
+      "q": "スマホデビュープランU15は5GB以下なら月額2,508円（税込）、5GB超〜20GBなら3,278円（税込）の2段階制である",
+      "a": true,
+      "exp": "2段階制。親子割適用で最安858円。上限設定オプションも用意されている"
+    },
+    {
+      "q": "UQモバイルからdocomoへMNPする際、dカードの保有は必須条件である",
+      "a": false,
+      "exp": "MNP自体にdカードは不要。dカードお支払割の条件はdcard保有だが、MNP手続き自体とは別"
+    }
+  ],
+  [
+    {
+      "q": "U15スマホデビュープランとU22割は同一の利用者（子供）に対して同時に重複登録することができる",
+      "a": true,
+      "exp": "U15とU22は同一利用者への登録が可能。申込時に子の本人確認書類が必要"
+    },
+    {
+      "q": "ahamoはドコモ光セット割の対象プランである",
+      "a": false,
+      "exp": "ahamoはドコモ光セット割の対象外。ただしみんなドコモ割のカウント対象（回線数に含まれる）"
+    },
+    {
+      "q": "Y!mobileの親子割（学生割引）を適用中の回線を他社へMNPすると、残りの適用期間分の割引もそのまま新キャリアで自動的に継続される",
+      "a": false,
+      "exp": "他社の割引はMNP後に継続されない。残り期間分の割引を手放すことになる旨を事前に必ず説明し、ドコモの新規特典・CBと比較して判断を仰ぐ"
+    },
+    {
+      "q": "iPhone17（MNP・新規）のカエドキプログラムは1円（初回11円）だが頭金16,500円（税込）が必要である",
+      "a": true,
+      "exp": "iPhone17は新規でも1円対応だが頭金16,500円が必要。iPhone16はMNPのみで頭金なし"
+    },
+    {
+      "q": "特典利用料ありの端末は、カエドキプログラムで返却しない場合に特典利用料が発生する",
+      "a": true,
+      "exp": "返却前提の特典価格のため、返却しない場合は追加費用が発生。必ず説明が必要"
+    }
+  ],
+  [
+    {
+      "q": "ドコモ mini（4GB）はドコモ光セット割＋dカードGOLDお支払割＋でんきセット割を適用すると月額880円（税込）になる",
+      "a": true,
+      "exp": "mini 4GB 2,750円 − 光セット割1,210円 − dカードGOLD550円 − でんき110円 = 880円"
+    },
+    {
+      "q": "ギガライトからドコモ miniへのプラン変更はドコモ内の変更のためMNPは不要である",
+      "a": true,
+      "exp": "同キャリア内のプラン変更のためMNP不要。ただし積極的にプラン見直しとして提案する"
+    },
+    {
+      "q": "別居の家族をファミリー割引グループに追加する場合、家族確認書類（健保・戸籍謄本など）は不要である",
+      "a": false,
+      "exp": "別居の家族グループ追加には家族確認書類が必須。当日の書類有無を最初に確認すること"
+    },
+    {
+      "q": "孫（13歳）をスマホデビューU15プランに変更するには、親（娘）がドコモMAX/ポイ活MAX/ahamoのいずれかであることが条件である",
+      "a": true,
+      "exp": "親子割（U15）適用のために親がこの3プランのいずれかを契約していることが条件"
+    },
+    {
+      "q": "ドコモでんきのセット割（▲110円/回線）はファミリー割引グループ内の全対象回線に適用される",
+      "a": true,
+      "exp": "でんきのペア回線が1つあれば、グループ内の全対象プラン（MAX/ポイ活MAX/mini等）に各▲110円適用"
+    },
+    {
+      "q": "娘が保有するau PAYゴールドカードをdカードGOLDに切り替える提案では、年会費差額の説明は不要である",
+      "a": false,
+      "exp": "dカードGOLD（年会費11,000円）はau PAYゴールド（年会費11,000円）より高くなるケースもあり、特典内容・還元率とあわせて比較説明が必須。CB10,000円だけを訴求しない"
+    }
+  ],
+  [
+    {
+      "q": "ドコモ ポイ活MAXはみんなドコモ割（3回線以上割引）の対象プランである",
+      "a": false,
+      "exp": "ポイ活MAXはみんなドコモ割の対象外。ただしドコモ光セット割・dカードGOLD・でんきセット割は適用可"
+    },
+    {
+      "q": "子（9歳）はスマホデビューU15プラン（5〜15歳対象）の対象である",
+      "a": true,
+      "exp": "9歳は5歳以上15歳以下の範囲内。スマホデビューU15＋親子割で858円〜"
+    },
+    {
+      "q": "夫のiPhone17 Pro（カエドキ残42回）はMNPしても端末残債は消えない",
+      "a": true,
+      "exp": "カエドキプログラム中の端末はMNPしても残債が消えるわけではない。残42回分の支払いが続く"
+    },
+    {
+      "q": "SoftBank光からドコモ光への切替は事業者変更（事変）で工事不要で切り替えられる",
+      "a": true,
+      "exp": "同じフレッツ回線を使う事業者変更なら工事不要。解約金・切替タイミングを先に確認する"
+    },
+    {
+      "q": "dカードGOLD（年会費11,000円）新規申込でCB10,000円が審査完了後に受け取れる",
+      "a": true,
+      "exp": "dカードGOLD新規でCB10,000円。ポイ活MAXと組み合わせるとdポイント還元率も最大化できる"
+    },
+    {
+      "q": "夫婦2人ともdカードGOLDに切り替える場合、年会費（11,000円×2）を上回るメリットが必ずある",
+      "a": false,
+      "exp": "利用額が少ないと年会費（11,000円）を上回らないケースもある。月額利用や還元率を踏まえて個別に試算し、CBだけを訴求しない"
+    }
+  ]
+];
+// 後方互換：getQuizDataはケースごとに返す
+
+var curQuiz = [];
+
+/* ============ サイドバー ============ */
+function buildSidebar(){
+  var sb = document.getElementById('sidebar');
+  var html = '<div class="sec-label">ケース一覧</div>';
+  CASES.forEach(function(c, i){
+    var saved = memCache[i] && memCache[i]._touched ? ' <span class="done">●保存済</span>' : '';
+    html += '<button class="cbtn' + (cur===i?' on':'') + '" data-i="' + i + '">' + c.name + saved + '</button>';
+  });
+  html += '<div class="sec-label" style="margin-top:12px">📋 施策早見（docomo版）</div>'
+    + '<div class="saku" style="border-left:3px solid #cc0000"><b style="color:#cc0000">docomo 端末（カエドキ）</b><br>iPhone 16（MNPのみ）：カエドキ1円・初回11円・特典利用料あり・頭金なし<br>iPhone 17（MNP/新規）：カエドキ1円・初回11円・特典利用料あり・頭金16,500円<br>キッズケータイ（新規）：一括3,960円・通信費550円/月</div>'
+    + '<div class="saku" style="border-left:3px solid #cc0000"><b style="color:#cc0000">docomo CBスキーム（現金：セブン銀行・2か月後）</b><br><b>ドコモ MAX / ポイ活MAX / ポイ活20（MNP・新規）：20,000円</b><br><b>ahamo（MNP・新規）：15,000円</b><br><b>ドコモ mini 6GB / 12GB（MNP・新規）：10,000円</b><br>─<br><b>ドコモ光（新規開通）：20,000pt</b>　開通後・店舗受取<br><b>ドコモでんき（新規開通）：10,000pt</b>　開通後<br><b>dカードGOLD（新規申込）：10,000pt</b>　審査完了後</div>'
+    + '<div class="saku" style="border-left:3px solid #cc0000"><b style="color:#cc0000">割引体系（税込）</b><br><b>みんなドコモ割</b>：3回線以上▲1,210円/回線（2回線▲550円）<br><b>ドコモ光 / home5Gセット割</b>：▲1,210円/回線（MAX/ポイ活MAX/ポイ活20/mini対象）<br><b>dカードGOLDお支払割</b>：▲550円（dカード▲220円）<br><b>ドコモでんきセット割</b>：▲110円/回線</div>'
+    + '<div class="saku" style="border-left:3px solid #cc0000"><b style="color:#cc0000">子供向け施策</b><br><b>スマホデビューU15</b>（5〜15歳）：5GB以下2,508円 / 5〜20GB 3,278円（2段階制）<br>　→ 親子割（最大12か月）＋dカードで<b>1年目858円〜</b><br><b>ドコモ親子割（家族）</b>：親がMAX/ポイ活MAX/ahamoなら親にも▲550円（最大12か月）<br><b>U22割</b>：22歳以下・ドコモMAX限定・最大7か月・27GB増量＋割引で実質0円<br>　利用者登録に22歳以下の子を入れると親の回線に適用可<br>　申込時に子の住民票・マイナンバー・資格証明書のいずれかが必要<br><b>キッズケータイ</b>：550円/月・端末一括3,960円<br><span style="font-size:11px">U15との同一利用者登録は不可。U22との同一利用者登録は可能。</span></div>'
+    + '<div class="saku" style="border-left:3px solid #8b0000"><b style="color:#8b0000">ポイ活MAX注意点</b><br>みんなドコモ割の<b>対象外</b>。光セット割＋dカードGOLD＋でんきセット割で最安値を作る<br>ahamoはドコモ光セット割対象外（みんなドコモ割のカウントはされる）<br>ドコモ光アップセルは不要（セット割の条件として入っていれば十分）</div>'
+  // 施策早見表の編集ボタン
+  html += '<button onclick="toggleSakuEdit()" style="margin-top:8px;width:100%;padding:6px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:12px" id="sakuEditBtn">✏️ 施策早見を編集</button>';
+  
+  sb.innerHTML = html;
+  sb.querySelectorAll('.cbtn').forEach(function(b){
+    b.addEventListener('click', function(){
+      selectCase(parseInt(b.getAttribute('data-i'), 10));
+    });
+  });
+}
+
+/* ============ 保存・読み込み ============ */
+function collect(){
+  var c = CASES[cur];
+  var blocks = [];
+  var n = c.phones.length;
+  for(var i=0;i<=n;i++){
+    var b = {
+      plan: val('f'+i+'_plan'),
+      base: val('f'+i+'_base'),
+      min:  val('f'+i+'_min'),
+      mustop: val('f'+i+'_mustop')
+    };
+    if(i===n){
+      b.how = val('f'+i+'_how');
+      b.kouji = val('f'+i+'_kouji'); b.koujifee = val('f'+i+'_koujifee'); b.koujitype = val('f'+i+'_koujitype');
+      b.hoten = val('f'+i+'_hoten');
+      b.sakusel = val('f'+i+'_sakusel'); b.cbfee = val('f'+i+'_cbfee');
+    } else {
+      b.disc = val('f'+i+'_disc');
+      b.callop = val('f'+i+'_callop'); b.callfee = val('f'+i+'_callfee');
+      b.card = val('f'+i+'_card'); b.cardreason = val('f'+i+'_cardreason');
+      b.cardfee = val('f'+i+'_cardfee'); b.cardmob = val('f'+i+'_cardmob'); b.cardhikari = val('f'+i+'_cardhikari');
+      b.saku = val('f'+i+'_saku');
+    }
+    blocks.push(b);
+  }
+  return { blocks: blocks, reason: val('f_reason'), cbtotal: val('f_cbtotal'), quiz: curQuiz.slice(), _touched: true, _time: new Date().toLocaleString('ja-JP') };
+}
+function val(id){ var e = document.getElementById(id); return e ? e.value : ''; }
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  setStatus('未保存の変更あり…', false);
+  saveTimer = setTimeout(doSave, 900);
+}
+
+function doSave(){
+  var data = collect();
+  memCache[cur] = data;
+  if(storageOK){
+    window.storage.set('kaitou:case' + cur, JSON.stringify(data)).then(function(){
+      setStatus('保存済み ' + data._time, true);
+      refreshSidebarDone();
+    }).catch(function(){
+      setStatus('保存済み（このセッション内のみ）', true);
+      refreshSidebarDone();
+    });
+  } else {
+    setStatus('保存済み（このセッション内のみ）', true);
+    refreshSidebarDone();
+  }
+}
+
+function loadCase(i){
+  return new Promise(function(resolve){
+    if(memCache[i]){ resolve(memCache[i]); return; }
+    if(!storageOK){ resolve(null); return; }
+    window.storage.get('kaitou:case' + i).then(function(r){
+      try {
+        var d = JSON.parse(r.value);
+        memCache[i] = d;
+        resolve(d);
+      } catch(e){ resolve(null); }
+    }).catch(function(){ resolve(null); });
+  });
+}
+
+function setStatus(msg, ok){
+  var el = document.getElementById('savestat');
+  if(el){ el.textContent = msg; el.className = 'savestat' + (ok ? ' ok' : ''); }
+}
+
+function refreshSidebarDone(){
+  var btns = document.querySelectorAll('.cbtn');
+  btns.forEach(function(b){
+    var i = parseInt(b.getAttribute('data-i'), 10);
+    var has = b.querySelector('.done');
+    if(memCache[i] && memCache[i]._touched && !has){
+      var s = document.createElement('span');
+      s.className = 'done'; s.textContent = ' ●保存済';
+      var small = b.querySelector('small');
+      b.insertBefore(s, small);
+    }
+  });
+}
+
+/* ============ メイン描画 ============ */
+function selectCase(i){
+  if(cur >= 0 && document.getElementById('f0_plan')){
+    memCache[cur] = collect();
+  }
+  cur = i;
+  buildSidebar();
+  loadCase(i).then(function(saved){
+    buildMain(saved);
+    window.scrollTo(0, 0);
+  });
+}
+
+function dotCls(v){ return v===true ? 'd-ok' : v===false ? 'd-ng' : 'd-q'; }
+function dotMark(v){ return v===true ? '○' : v===false ? '×' : v; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function selHTML(id, opts, sel){
+  var h = '<select id="' + id + '">';
+  opts.forEach(function(o){
+    h += '<option' + (o===sel ? ' selected' : '') + '>' + o + '</option>';
+  });
+  return h + '</select>';
+}
+
+function quizHTML(saved){
+  curQuiz = (saved || []).slice();
+  var h = '';
+  getQuizData(cur).forEach(function(item, i){
+    var sel = curQuiz[i];
+    var res = '';
+    if(sel === 'o' || sel === 'x'){
+      var correct = (sel === 'o') === item.a;
+      res = '<div class="qres ' + (correct ? 'qok' : 'qng') + '">' + (correct ? '○ 正解！' : '× 不正解…') + ' ' + item.exp + '</div>';
+    }
+    h += '<div class="qitem"><div class="qtext">Q' + (i+1) + '. ' + item.q + '</div>'
+      + '<div class="qbtns">'
+      + '<button type="button" class="qbtn' + (sel==='o'?' qsel':'') + '" data-q="' + i + '" data-v="o">○</button>'
+      + '<button type="button" class="qbtn' + (sel==='x'?' qsel':'') + '" data-q="' + i + '" data-v="x">×</button>'
+      + '</div><div id="qres' + i + '">' + res + '</div></div>';
+  });
+  return h;
+}
+
+function bindQuiz(){
+  document.querySelectorAll('.qbtn').forEach(function(b){
+    b.addEventListener('click', function(){
+      var i = parseInt(b.getAttribute('data-q'), 10);
+      var v = b.getAttribute('data-v');
+      curQuiz[i] = v;
+      var item = getQuizData(cur)[i];
+      var correct = (v === 'o') === item.a;
+      var res = document.getElementById('qres' + i);
+      if(res) res.innerHTML = '<div class="qres ' + (correct ? 'qok' : 'qng') + '">' + (correct ? '○ 正解！' : '× 不正解…') + ' ' + item.exp + '</div>';
+      b.parentElement.querySelectorAll('.qbtn').forEach(function(x){ x.classList.remove('qsel'); });
+      b.classList.add('qsel');
+      scheduleSave();
+    });
+  });
+}
+
+function blockHTML(i, label, isNet, d){
+  d = d || {};
+  var h = '<div class="fblock"><div class="fblock-title">' + label + '</div>';
+  if(isNet){
+    h += '<div class="fl">プラン（選択）</div>' + selHTML('f'+i+'_plan', NET_OPTS, d.plan);
+    h += '<div class="fl">変更方法</div>' + selHTML('f'+i+'_how', HOW_OPTS, d.how);
+    h += '<div class="fl">基本料金（円）</div><div class="yen"><input type="number" id="f'+i+'_base" placeholder="" value="' + esc(d.base) + '"><span>円</span></div>';
+    h += '<div class="fl">月額料金（円）＝実際の支払額</div><div class="yen"><input type="number" id="f'+i+'_min" placeholder="" value="' + esc(d.min) + '"><span>円</span></div>';
+    h += '<div id="f'+i+'_netwarn" style="display:none;color:var(--ng);font-size:11px;margin-top:4px;line-height:1.5"></div>';
+    h += '<div class="fl">工事有無</div>' + selHTML('f'+i+'_kouji', KOUJI_OPTS, d.kouji);
+    h += '<div id="f'+i+'_koujifee_w" style="display:none"><div class="fl">工事費の金額（円）</div><div class="yen"><input type="number" id="f'+i+'_koujifee" placeholder="" value="' + esc(d.koujifee) + '"><span>円</span></div></div>';
+    h += '<div id="f'+i+'_koujitype_w" style="display:none"><div class="fl">工事なしの種別</div>' + selHTML('f'+i+'_koujitype', KOUJITYPE_OPTS, d.koujitype) + '</div>';
+    h += '<div class="fl">解約金補填の有無</div>' + selHTML('f'+i+'_hoten', HOTEN_OPTS, d.hoten);
+    h += '<div class="fl">施策</div>' + selHTML('f'+i+'_sakusel', NETSAKU_OPTS, d.sakusel);
+    h += '<div id="f'+i+'_cbfee_w" style="display:none"><div class="fl">CBの金額（円）</div><div class="yen"><input type="number" id="f'+i+'_cbfee" placeholder="" value="' + esc(d.cbfee) + '"><span>円</span></div></div>';
+    return h + '</div>';
+  }
+  h += '<div class="fl">プラン・GB数（選択）</div>' + selHTML('f'+i+'_plan', PLAN_OPTS, d.plan);
+  h += '<div class="fl">基本料金（円）</div><div class="yen"><input type="number" id="f'+i+'_base" placeholder="" value="' + esc(d.base) + '"><span>円</span></div>';
+  h += '<div class="fl">この想定での最安値（円）</div><div class="yen"><input type="number" id="f'+i+'_min" placeholder="" value="' + esc(d.min) + '"><span>円</span></div>';
+  h += '<div class="fl">割引の種類と金額</div><input type="text" id="f'+i+'_disc" placeholder="ドコモ光セット-〇円、みんなドコモ割-〇円、dカードGOLD-〇円" value="' + esc(d.disc) + '">';
+  h += '<div class="fl">電話オプション</div>' + selHTML('f'+i+'_callop', CALL_OPTS, d.callop);
+  h += '<div class="fl">電話オプション金額（円）</div><div class="yen"><input type="number" id="f'+i+'_callfee" placeholder="" value="' + esc(d.callfee) + '"><span>円</span></div>';
+  h += '<div class="fl">dカード</div>' + selHTML('f'+i+'_card', CARD_OPTS, d.card);
+  h += '<div id="f'+i+'_cardreason_w" style="display:none"><div class="fl">つけない理由</div><input type="text" id="f'+i+'_cardreason" placeholder="" value="' + esc(d.cardreason) + '"></div>';
+  h += '<div id="f'+i+'_cardnum_w" style="display:none">'
+    + '<div class="fl">カード割引額（円/月）</div><div class="yen"><input type="number" id="f'+i+'_cardfee" placeholder="" value="' + esc(d.cardfee) + '"><span>円</span></div>'
+    + '<div class="fl">モバイル支払いの還元率（%）</div><div class="yen"><input type="number" step="0.1" id="f'+i+'_cardmob" placeholder="" value="' + esc(d.cardmob) + '"><span>%</span></div>'
+    + '<div class="fl">光（固定回線）支払いの還元率（%）</div><div class="yen"><input type="number" step="0.1" id="f'+i+'_cardhikari" placeholder="" value="' + esc(d.cardhikari) + '"><span>%</span></div>'
+    + '</div>';
+  h += '<div class="fl">施策・CB額</div><input type="text" id="f'+i+'_saku" placeholder="" value="' + esc(d.saku) + '">';
+  h += '<div class="fl">必須オプション・注意事項</div><input type="text" id="f'+i+'_mustop" placeholder="" value="' + esc(d.mustop) + '">';
+  return h + '</div>';
+}
+
+function buildMain(saved){
+  var c = getCaseData(cur);
+  var d = saved || { blocks: [], reason: '' };
+
+  var phones = '';
+  c.phones.forEach(function(p){
+    phones += '<div class="card">'
+      + '<span class="tag ' + p.tag + '">' + p.label + '</span>'
+      + '<div class="who">' + p.who + '</div>'
+      + '<div class="row"><span class="rk">プラン</span><span class="rv">' + p.plan + '</span></div>'
+      + '<div class="row"><span class="rk">利用量</span><span class="rv">' + p.usage + '</span></div>'
+      + '<div class="row"><span class="rk">月額</span><span class="rv">' + p.fee + '</span></div>'
+      + '<div class="row"><span class="rk">端末代</span><span class="rv">' + p.dfee + '</span></div>'
+      + '<div class="sub">' + p.device + '</div></div>';
+  });
+  phones += '<div class="card"><span class="tag t-net">自宅回線</span>'
+    + '<div class="row"><span class="rk">回線名</span><span class="rv" style="font-size:11px">' + c.net.name + '</span></div>'
+    + '<div class="row"><span class="rk">種別</span><span class="rv">' + c.net.type + '</span></div>'
+    + '<div class="row"><span class="rk">速度</span><span class="rv">' + c.net.speed + '</span></div>'
+    + '<div class="row"><span class="rk">月額料金</span><span class="rv">' + c.net.fee + '</span></div>'
+    + '<div class="row"><span class="rk">固定電話</span><span class="rv">' + c.net.tel + '</span></div>'
+    + '<div class="row"><span class="rk">テレビ</span><span class="rv">' + c.net.tv + '</span></div>'
+    + '<div class="row"><span class="rk">工事費</span><span class="rv">' + c.net.cost + '</span></div>'
+    + '<div class="row"><span class="rk">残債</span><span class="rv" style="font-size:11px">' + c.net.debt + '</span></div>'
+    + '<div class="sub">備考：' + c.net.note + '</div></div>';
+  if(c.net2){
+    phones += '<div class="card"><span class="tag t-net">自宅回線②</span>'
+      + '<div class="row"><span class="rk">回線名</span><span class="rv" style="font-size:11px">' + c.net2.name + '</span></div>'
+      + '<div class="row"><span class="rk">種別</span><span class="rv">' + c.net2.type + '</span></div>'
+      + '<div class="row"><span class="rk">速度</span><span class="rv">' + c.net2.speed + '</span></div>'
+      + '<div class="row"><span class="rk">月額料金</span><span class="rv">' + c.net2.fee + '</span></div>'
+      + '<div class="row"><span class="rk">固定電話</span><span class="rv">' + c.net2.tel + '</span></div>'
+      + '<div class="row"><span class="rk">テレビ</span><span class="rv">' + c.net2.tv + '</span></div>'
+      + '<div class="row"><span class="rk">工事費</span><span class="rv">' + c.net2.cost + '</span></div>'
+      + '<div class="row"><span class="rk">残債</span><span class="rv" style="font-size:11px">' + c.net2.debt + '</span></div>'
+      + '<div class="sub">備考：' + c.net2.note + '</div></div>';
+  }
+
+  var area = '<div class="agrid">';
+  c.area.forEach(function(a){
+    area += '<div class="aitem"><span class="dot ' + dotCls(a[0]) + '"></span>' + a[1] + '：' + dotMark(a[0]) + '</div>';
+  });
+  area += '</div>';
+
+  // 回答フォームブロック
+  var form = '';
+  c.phones.forEach(function(p, i){
+    var marks = ['①','②','③'];
+    form += blockHTML(i, marks[i] + ' ' + p.who, false, d.blocks[i]);
+  });
+  form += blockHTML(c.phones.length, '④ 固定回線', true, d.blocks[c.phones.length]);
+
+  var opened = !!showAns[cur];
+
+  document.getElementById('main').innerHTML =
+    '<div class="case-title">' + c.title + '</div>'
+    + '<h2 class="sec">現状のスマホ・回線</h2>'
+    + '<div class="grid">' + phones + '</div>'
+    + '<div class="inforow">'
+    + '<div class="sbox warn" style="flex:2"><div class="stitle">🔒 特記・制約事項</div><div class="sbody">' + c.special + '</div></div>'
+    + '<div class="sbox"><div class="stitle">📍 エリア検索結果</div>' + area + '</div>'
+    + '</div>'
+    + (getDecisionLog(cur) ? '<div class="sbox" style="margin-bottom:1.25rem"><div class="stitle">🗒 過去の意思決定</div><div class="sbody" style="white-space:pre-wrap">' + esc(getDecisionLog(cur)) + '</div></div>' : '')
+    + '<div class="azone">'
+    + '<div class="ahead"><span class="ahtitle">✏️ 受講者回答欄</span><div class="btns">'
+    + '<span class="savestat" id="savestat">' + (saved && saved._time ? '保存済み ' + saved._time : '未入力') + '</span>'
+    + '<button class="ghost" id="savebtn">保存</button>'
+    + '<button class="act" id="ansbtn">' + (opened ? '解答を隠す' : '解答を見る') + '</button>'
+    + '</div></div>'
+    + '<div class="formgrid">' + form + '</div>'
+    + '<div class="reasonarea" style="border-bottom:1px solid var(--line)"><div class="memlabel">注意事項クイズ（○か×で答える）</div><div id="quizwrap">' + quizHTML(d.quiz) + '</div></div>'
+    + '<div class="reasonarea"><div class="memlabel">CB・還元の合計金額（円）</div>'
+    + '<div class="yen" style="max-width:240px;margin-bottom:12px"><input type="number" id="f_cbtotal" placeholder="" value="' + esc(d.cbtotal) + '"><span>円</span></div>'
+    + '<div class="memlabel">提案理由・パターンメモ</div>'
+    + '<textarea id="f_reason" placeholder="この提案にした理由・別パターンの検討など">' + esc(d.reason) + '</textarea></div>'
+    + '<div class="ansarea" id="ansarea" style="display:' + (opened ? 'block' : 'none') + '">'
+    + '<div class="anslabel">✅ 模範解答（複数パターン）</div>'
+    + '<div class="ansbody">' + renderAnswerHTML(cur) + '</div></div>'
+    + '</div>'
+    + '<div class="hint">入力は自動保存されます（手動「保存」も可）。まず自分で記入→「解答を見る」で答え合わせ</div>';
+
+  document.getElementById('ansbtn').addEventListener('click', function(){
+    memCache[cur] = collect();
+    showAns[cur] = !showAns[cur];
+    buildMain(memCache[cur]);
+  });
+  document.getElementById('savebtn').addEventListener('click', doSave);
+
+  document.querySelectorAll('#main select, #main input, #main textarea').forEach(function(el){
+    el.addEventListener('input', scheduleSave);
+    el.addEventListener('change', scheduleSave);
+  });
+
+  c.phones.forEach(function(_, i){
+    var sel = document.getElementById('f'+i+'_card');
+    if(sel){
+      sel.addEventListener('change', function(){ updateCardFields(i); });
+      updateCardFields(i);
+    }
+  });
+
+  var n = c.phones.length;
+  ['_plan','_base','_min'].forEach(function(suf){
+    var el = document.getElementById('f'+n+suf);
+    if(el){
+      el.addEventListener('input', function(){ checkNetFee(n); });
+      el.addEventListener('change', function(){ checkNetFee(n); });
+    }
+  });
+  checkNetFee(n);
+  ['_sakusel','_kouji'].forEach(function(suf){
+    var el = document.getElementById('f'+n+suf);
+    if(el){ el.addEventListener('change', function(){ updateNetFields(n); }); }
+  });
+  updateNetFields(n);
+  bindQuiz();
+}
+
+function updateCardFields(i){
+  var v = val('f'+i+'_card');
+  var rw = document.getElementById('f'+i+'_cardreason_w');
+  var nw = document.getElementById('f'+i+'_cardnum_w');
+  if(rw) rw.style.display = (v === 'つけない') ? 'block' : 'none';
+  if(nw) nw.style.display = (v === 'dカード（ノーマル）' || v === 'dカードGOLD') ? 'block' : 'none';
+}
+
+function updateNetFields(n){
+  var saku = val('f'+n+'_sakusel');
+  var kouji = val('f'+n+'_kouji');
+  var cbw = document.getElementById('f'+n+'_cbfee_w');
+  var kfw = document.getElementById('f'+n+'_koujifee_w');
+  var ktw = document.getElementById('f'+n+'_koujitype_w');
+  if(cbw) cbw.style.display = (saku === 'KD20' || saku === 'KD30') ? 'block' : 'none';
+  if(kfw) kfw.style.display = (kouji === '工事あり') ? 'block' : 'none';
+  if(ktw) ktw.style.display = (kouji === '工事なし') ? 'block' : 'none';
+}
+
+function checkNetFee(n){
+  var plan = val('f'+n+'_plan');
+  var base = parseInt(val('f'+n+'_base'), 10);
+  var fee  = parseInt(val('f'+n+'_min'), 10);
+  var w = document.getElementById('f'+n+'_netwarn');
+  if(!w) return;
+  if(plan.indexOf('SoftBank光') === 0 && !isNaN(base) && !isNaN(fee)){
+    if(fee !== base + 550){
+      w.style.display = 'block';
+      w.innerHTML = '⚠ <b>光は月額＝基本料金＋550円</b>（オプションパック：光BBユニット＋Wi-Fiマルチパック＋光電話。携帯がSB/YMだと3点セット550円）。' + (base+550) + '円になっているか確認！';
+    } else {
+      w.style.display = 'block';
+      w.style.color = 'var(--ok)';
+      w.innerHTML = '✓ 基本料金＋オプションパック550円 OK';
+      return;
+    }
+    w.style.color = 'var(--ng)';
+  } else {
+    w.style.display = 'none';
+  }
+}
+
+/* ============ AI質問（補助） ============ */
+/* ============ 解答編集モーダル ============ */
+var editCase = 0;
+var editedAnsData = {};   // i -> {patterns:[...]} の形式で管理
+
+function getCaseData(i){ return editedCases[i] !== undefined ? editedCases[i] : CASES[i]; }
+function getQuizData(i){
+  var idx = (i !== undefined) ? i : cur;
+  if(editedQuiz && editedQuiz[idx] !== undefined) return editedQuiz[idx];
+  return QUIZ_PER_CASE[idx] || [];
+}
+function getDecisionLog(i){ var cd = getCaseData(i); return (cd && cd.decisionLog) ? cd.decisionLog : ''; }
+
+/* ===== 施策早見表 編集機能 ===== */
+var sakuEditMode = false;
+var SAKU_TEXTS = null;
+
+function getSakuBlocks(){
+  return Array.from(document.querySelectorAll('#sb .saku'));
+}
+
+function toggleSakuEdit(){
+  sakuEditMode = !sakuEditMode;
+  var btn = document.getElementById('sakuEditBtn');
+  if(sakuEditMode){
+    btn.textContent = '✅ 編集を保存して閉じる';
+    btn.style.background = '#e8f5e9';
+    getSakuBlocks().forEach(function(div, i){
+      var ta = document.createElement('textarea');
+      ta.className = 'saku-edit-ta';
+      ta.style.cssText = 'width:100%;min-height:80px;font-size:11px;padding:4px;box-sizing:border-box;border:1px solid #cc0000;border-radius:4px;resize:vertical';
+      ta.value = div.innerHTML;
+      ta.setAttribute('data-idx', i);
+      div.replaceWith(ta);
+    });
+  } else {
+    // 保存してHTMLに戻す
+    document.querySelectorAll('.saku-edit-ta').forEach(function(ta){
+      var div = document.createElement('div');
+      div.className = 'saku';
+      div.innerHTML = ta.value;
+      ta.replaceWith(div);
+    });
+    btn.textContent = '✏️ 施策早見を編集';
+    btn.style.background = '#f0f0f0';
+  }
+}
+
+function getAnsPatterns(i){ return (editedAnsData[i] !== undefined ? editedAnsData[i] : ANS_DATA[i]).patterns; }
+function renderAnswerHTML(i){
+  var patterns = getAnsPatterns(i);
+  var cas = getCaseData(i);
+  var marks = ['①','②','③'];
+  var html = '';
+  patterns.forEach(function(pat, pi){
+    html += '<h3 style="margin-top:'+(pi===0?'0':'20px')+'">'+esc(pat.title)+'</h3>';
+    if(pat.reason) html += '<div class="reason-box" style="margin-bottom:10px"><b>提案理由</b> '+pat.reason+'</div>';
+    html += '<table><tr><th></th><th>プラン・GB数</th><th>最安値/基本料金</th><th>割引内訳</th><th>施策・CB・端末</th></tr>';
+    pat.phones.forEach(function(ph, j){
+      var who = cas.phones[j] ? cas.phones[j].who : marks[j];
+      html += '<tr><td><b>'+esc(who)+'</b></td><td>'+esc(ph.plan)+'</td><td>'+esc(ph.min)+'</td><td>'+esc(ph.disc)+'</td><td>'+esc(ph.saku)+'</td></tr>';
+    });
+    html += '<tr><td><b>④固定回線</b></td><td>'+esc(pat.net.plan)+'</td><td>'+esc(pat.net.fee)+'</td><td>'+esc(pat.net.how)+'</td><td>'+esc(pat.net.saku)+'</td></tr>';
+    html += '</table>';
+    if(pat.points){
+      html += '<div class="point"><b>このケースの判断ポイント</b><br>'+pat.points.split('\n').join('<br>')+'</div>';
+    }
+  });
+  return html;
+}
+
+function loadAllEdits(){
+  // ストレージは使わず、起動時にJSONファイルをインポートした場合のみ反映される
+  return Promise.resolve();
+}
+
+var editSubTab = 'answer'; // 'answer' | 'customer' | 'quiz'
+var editedCases = {};   // i -> {phones, net, special, area}
+var editedQuiz = {};   // {caseIndex: [...questions]} の形式
+
+// 配布用ビルド時にここへJSONを埋め込むと、開いた瞬間から反映される
+var EMBEDDED_EDITS = null;
+if(EMBEDDED_EDITS){
+  if(EMBEDDED_EDITS.ansData) Object.assign(editedAnsData, EMBEDDED_EDITS.ansData);
+  if(EMBEDDED_EDITS.cases) Object.assign(editedCases, EMBEDDED_EDITS.cases);
+  if(EMBEDDED_EDITS.quiz) Object.assign(editedQuiz, EMBEDDED_EDITS.quiz);
+}
+
+function openEditor(){
+  loadAllEdits().then(function(){
+    editCase = cur >= 0 ? cur : 0;
+    editSubTab = 'answer';
+    renderEditTabs();
+    renderEditSubTabs();
+    renderEditBody();
+    document.getElementById('editModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+}
+
+function renderEditSubTabs(){
+  var tb = document.getElementById('editSubTabs');
+  if(!tb) return;
+  var tabs = [['answer','✏️ 模範解答'],['customer','👤 顧客設定'],['quiz','❓ 注意事項クイズ']];
+  tb.innerHTML = tabs.map(function(t){
+    return '<button class="modal-tab'+(editSubTab===t[0]?' on':'')+'" data-sub="'+t[0]+'">'+t[1]+'</button>';
+  }).join('');
+  tb.querySelectorAll('.modal-tab').forEach(function(b){
+    b.addEventListener('click', function(){
+      flushEditorValues();
+      editSubTab = b.getAttribute('data-sub');
+      renderEditSubTabs();
+      renderEditBody();
+    });
+  });
+}
+function closeEditor(){
+  document.getElementById('editModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderEditTabs(){
+  var tb = document.getElementById('editTabs');
+  if(!tb) return;
+  tb.innerHTML = CASES.map(function(cas,i){
+    var label = cas.name.replace('\n',' ');
+    var custom = (editedAnsData[i] !== undefined || editedCases[i] !== undefined) ? ' ✎' : '';
+    return '<button class="modal-tab'+(i===editCase?' on':'')+'" data-i="'+i+'">'+label+custom+'</button>';
+  }).join('');
+  tb.querySelectorAll('.modal-tab').forEach(function(b){
+    b.addEventListener('click', function(){
+      flushEditorValues();
+      editCase = parseInt(b.getAttribute('data-i'),10);
+      renderEditTabs();
+      renderEditBody();
+    });
+  });
+}
+
+function renderEditBody(){
+  var el = document.getElementById('editBody');
+  if(!el) return;
+  var st = document.getElementById('editStat');
+
+  if(editSubTab === 'answer'){
+    var patterns = getAnsPatterns(editCase);
+    var cas = getCaseData(editCase);
+    var isCustom = editedAnsData[editCase] !== undefined;
+    if(st){ st.textContent = isCustom ? '✎ カスタム編集済み' : 'デフォルト'; st.className = 'edit-stat'+(isCustom?' custom':''); }
+    var marks = ['①','②','③'];
+    var h = '';
+    patterns.forEach(function(pat, pi){
+      h += '<div class="edit-phone-block" style="margin-bottom:14px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        + '<div class="edit-section-title">📋 パターン'+(pi+1)+'</div>'
+        + '<button type="button" class="btn-tiny danger" onclick="removeAnsPattern('+pi+')">このパターンを削除</button>'
+        + '</div>'
+        + '<div class="edit-label">パターン名</div>'
+        + '<input type="text" id="ep_title'+pi+'" value="'+safeEnc(pat.title)+'" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:13px;font-family:inherit;margin-bottom:8px">'
+        + '<div class="edit-label">提案理由（1〜2行）</div>'
+        + '<textarea class="edit-ta" id="ep_reason'+pi+'" rows="2" style="min-height:60px">'+safeEnc(pat.reason||'')+'</textarea>';
+      cas.phones.forEach(function(phone, j){
+        h += '<div style="background:var(--sb-light);border-radius:8px;padding:10px;margin-top:8px">'
+          + '<div style="font-size:12px;font-weight:600;margin-bottom:6px">'+phone.who+'</div>'
+          + '<div class="edit-row">'
+          + '<div class="ef"><label class="fl">プラン・GB数</label><input type="text" id="ep_p'+pi+'_plan'+j+'" value="'+safeEnc(pat.phones[j]?pat.phones[j].plan:'')+'"></div>'
+          + '<div class="ef"><label class="fl">最安値/基本料金</label><input type="text" id="ep_p'+pi+'_min'+j+'" value="'+safeEnc(pat.phones[j]?pat.phones[j].min:'')+'"></div>'
+          + '</div><div class="edit-row">'
+          + '<div class="ef" style="flex:2"><label class="fl">割引内訳と金額</label><input type="text" id="ep_p'+pi+'_disc'+j+'" value="'+safeEnc(pat.phones[j]?pat.phones[j].disc:'')+'"></div>'
+          + '</div><div class="edit-row">'
+          + '<div class="ef" style="flex:2"><label class="fl">施策・CB・端末</label><input type="text" id="ep_p'+pi+'_saku'+j+'" value="'+safeEnc(pat.phones[j]?pat.phones[j].saku:'')+'"></div>'
+          + '</div></div>';
+      });
+      h += '<div style="background:#f0f4f8;border-radius:8px;padding:10px;margin-top:8px">'
+        + '<div style="font-size:12px;font-weight:600;margin-bottom:6px">④固定回線</div>'
+        + '<div class="edit-row">'
+        + '<div class="ef"><label class="fl">プラン</label><input type="text" id="ep_p'+pi+'_net_plan" value="'+safeEnc(pat.net.plan)+'"></div>'
+        + '<div class="ef"><label class="fl">月額</label><input type="text" id="ep_p'+pi+'_net_fee" value="'+safeEnc(pat.net.fee)+'"></div>'
+        + '</div><div class="edit-row">'
+        + '<div class="ef"><label class="fl">変更方法</label><input type="text" id="ep_p'+pi+'_net_how" value="'+safeEnc(pat.net.how)+'"></div>'
+        + '<div class="ef" style="flex:2"><label class="fl">施策・CB</label><input type="text" id="ep_p'+pi+'_net_saku" value="'+safeEnc(pat.net.saku)+'"></div>'
+        + '</div></div>'
+        + '<div class="edit-label" style="margin-top:8px">判断ポイント（改行区切り）</div>'
+        + '<textarea class="edit-ta" id="ep_p'+pi+'_points" rows="4" style="min-height:80px">'+safeEnc(pat.points||'')+'</textarea>'
+        + '</div>';
+    });
+    h += '<button type="button" class="btn-tiny" style="margin-top:8px;font-size:13px;padding:8px 16px" onclick="addAnsPattern()">＋ パターンを追加</button>'
+      + '<p style="font-size:11px;color:var(--ink3);margin-top:10px">変更は「✓ この内容を反映して閉じる」を押すとプレビューに即反映されます。「📥 JSONで書き出し」→私に送れば配布版HTMLを作成します。</p>';
+    el.innerHTML = h;
+    return;
+  }
+
+  if(editSubTab === 'customer'){
+    var cas = getCaseData(editCase);
+    var isCustomC = editedCases[editCase] !== undefined;
+    if(st){ st.textContent = isCustomC ? '✎ カスタム編集済み' : 'デフォルト'; st.className = 'edit-stat'+(isCustomC?' custom':''); }
+    var html = '<div class="edit-section"><div class="edit-section-title">📱 スマホ情報</div>';
+    cas.phones.forEach(function(p, j){
+      html += '<div class="edit-phone-block">'
+        + '<div class="edit-row">'
+        + '<div class="ef"><label>対象（誰）</label><input type="text" id="ec_who'+j+'" value="'+safeEnc(p.who)+'"></div>'
+        + '<div class="ef"><label>キャリア表示</label><input type="text" id="ec_label'+j+'" value="'+safeEnc(p.label)+'"></div>'
+        + '</div>'
+        + '<div class="edit-row">'
+        + '<div class="ef"><label>プラン名</label><input type="text" id="ec_plan'+j+'" value="'+safeEnc(p.plan)+'"></div>'
+        + '<div class="ef"><label>利用量</label><input type="text" id="ec_usage'+j+'" value="'+safeEnc(p.usage)+'"></div>'
+        + '<div class="ef"><label>月額料金</label><input type="text" id="ec_fee'+j+'" value="'+safeEnc(p.fee)+'"></div>'
+        + '</div>'
+        + '<div class="edit-row">'
+        + '<div class="ef" style="flex:2"><label>端末名・メモ</label><input type="text" id="ec_device'+j+'" value="'+safeEnc(p.device)+'"></div>'
+        + '<div class="ef"><label>端末代</label><input type="text" id="ec_dfee'+j+'" value="'+safeEnc(p.dfee)+'"></div>'
+        + '</div></div>';
+    });
+    html += '</div><div class="edit-section"><div class="edit-section-title">🌐 固定回線情報</div><div class="edit-phone-block">'
+      + '<div class="edit-row">'
+      + '<div class="ef"><label>回線名</label><input type="text" id="ec_net_name" value="'+safeEnc(cas.net.name)+'"></div>'
+      + '<div class="ef"><label>種別</label><input type="text" id="ec_net_type" value="'+safeEnc(cas.net.type)+'"></div>'
+      + '<div class="ef"><label>速度</label><input type="text" id="ec_net_speed" value="'+safeEnc(cas.net.speed)+'"></div>'
+      + '</div><div class="edit-row">'
+      + '<div class="ef"><label>月額料金</label><input type="text" id="ec_net_fee" value="'+safeEnc(cas.net.fee)+'"></div>'
+      + '<div class="ef"><label>固定電話</label><input type="text" id="ec_net_tel" value="'+safeEnc(cas.net.tel)+'"></div>'
+      + '<div class="ef"><label>テレビ</label><input type="text" id="ec_net_tv" value="'+safeEnc(cas.net.tv)+'"></div>'
+      + '</div><div class="edit-row">'
+      + '<div class="ef"><label>工事費</label><input type="text" id="ec_net_cost" value="'+safeEnc(cas.net.cost)+'"></div>'
+      + '<div class="ef" style="flex:2"><label>残債</label><input type="text" id="ec_net_debt" value="'+safeEnc(cas.net.debt)+'"></div>'
+      + '</div><div class="edit-row">'
+      + '<div class="ef" style="flex:1"><label>備考</label><input type="text" id="ec_net_note" value="'+safeEnc(cas.net.note)+'"></div>'
+      + '</div></div></div>'
+      + '<div class="edit-section"><div class="edit-section-title">🔒 特記・制約事項</div>'
+      + '<textarea class="edit-ta" id="ec_special" rows="5">'+safeEnc(cas.special)+'</textarea></div>'
+      + '<div class="edit-section"><div class="edit-section-title">📍 エリア検索結果</div>';
+    cas.area.forEach(function(a, k){
+      html += '<div class="edit-area-row">'
+        + '<input type="text" id="ec_area_label'+k+'" value="'+safeEnc(a[1])+'" style="flex:1.4">'
+        + '<select id="ec_area_val'+k+'">'
+        + '<option value="true"'+(a[0]===true?' selected':'')+'>○</option>'
+        + '<option value="false"'+(a[0]===false?' selected':'')+'>×</option>'
+        + '<option value="後日判定"'+(a[0]==='後日判定'?' selected':'')+'>後日判定</option>'
+        + '</select></div>';
+    });
+    html += '</div>'
+      + '<div class="edit-section"><div class="edit-section-title">🗒 過去の意思決定（メモ）</div>'
+      + '<textarea class="edit-ta" id="ec_decisionlog" rows="6" placeholder="例：2026/6 来店時、父はキャッシュバックより端末の新しさを優先したいと判断。光は維持で決定。">' + safeEnc(getDecisionLog(editCase)) + '</textarea>'
+      + '<p style="font-size:11px;color:var(--ink3);margin-top:6px">このお客様について過去にどう判断したか・次回の商談で引き継ぎたい経緯などを自由に書き溜められます。受講者画面にも「過去の意思決定」として表示されます。</p></div>'
+      + '<p style="font-size:11px;color:var(--ink3);margin-top:8px">スマホ情報・固定回線・特記事項・エリア検索結果は受講者画面の各カードに反映されます。</p>';
+    el.innerHTML = html;
+    return;
+  }
+
+  if(editSubTab === 'quiz'){
+    var quizArr = getQuizData(editCase);
+    var isCustomQ = editedQuiz !== null;
+    if(st){ st.textContent = isCustomQ ? '✎ カスタム編集済み' : 'デフォルト'; st.className = 'edit-stat'+(isCustomQ?' custom':''); }
+    var qhtml = '<p style="font-size:11px;color:var(--ink3);margin-bottom:10px">このケースの注意事項クイズを編集します。正解は○/×で選択してください。</p>';
+    quizArr.forEach(function(q, qi){
+      qhtml += '<div class="edit-quiz-block">'
+        + '<div class="edit-row"><div class="ef" style="flex:1"><label>Q'+(qi+1)+'. 問題文</label><textarea id="eq_q'+qi+'" rows="2">'+safeEnc(q.q)+'</textarea></div></div>'
+        + '<div class="edit-row">'
+        + '<div class="ef" style="max-width:120px"><label>正解</label><select id="eq_a'+qi+'"><option value="true"'+(q.a===true?' selected':'')+'>○</option><option value="false"'+(q.a===false?' selected':'')+'>×</option></select></div>'
+        + '<div class="ef" style="flex:2"><label>解説</label><input type="text" id="eq_exp'+qi+'" value="'+safeEnc(q.exp)+'"></div>'
+        + '</div>'
+        + '<button type="button" class="btn-tiny danger" onclick="removeQuizItem('+qi+')">この問題を削除</button>'
+        + '</div>';
+    });
+    qhtml += '<button type="button" class="btn-tiny" onclick="addQuizItem()" style="margin-top:4px">＋ 問題を追加</button>';
+    el.innerHTML = qhtml;
+    return;
+  }
+}
+
+function addAnsPattern(){
+  flushEditorValues();
+  var cas = getCaseData(editCase);
+  var cur_patterns = (editedAnsData[editCase]||{patterns:ANS_DATA[editCase].patterns.slice()}).patterns.slice();
+  cur_patterns.push({
+    title:'新しいパターン',
+    reason:'',
+    phones: cas.phones.map(function(){ return {plan:'',min:'',disc:'',saku:''}; }),
+    net:{plan:'',fee:'',how:'',saku:''},
+    points:''
+  });
+  if(!editedAnsData[editCase]) editedAnsData[editCase] = {};
+  editedAnsData[editCase].patterns = cur_patterns;
+  renderEditBody();
+}
+
+function removeAnsPattern(idx){
+  if(!confirm('このパターンを削除しますか？')) return;
+  flushEditorValues();
+  var cur_patterns = getAnsPatterns(editCase).slice();
+  cur_patterns.splice(idx, 1);
+  if(!editedAnsData[editCase]) editedAnsData[editCase] = {};
+  editedAnsData[editCase].patterns = cur_patterns;
+  renderEditBody();
+}
+
+function addQuizItem(){
+  flushEditorValues();
+  var qa = getQuizData(editCase).slice();
+  qa.push({q:'', a:true, exp:''});
+  editedQuiz[editCase] = qa;
+  renderEditBody();
+}
+function removeQuizItem(idx){
+  flushEditorValues();
+  var qa = getQuizData(editCase).slice();
+  qa.splice(idx, 1);
+  editedQuiz[editCase] = qa;
+  renderEditBody();
+}
+
+function safeEnc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function safeDec(s){ return s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'); }
+
+function flushEditorValues(){
+  if(editSubTab === 'answer'){
+    var basePatterns = getAnsPatterns(editCase);
+    var cas = getCaseData(editCase);
+    var newPatterns = basePatterns.map(function(pat, pi){
+      var np = {
+        title: safeDec(val('ep_title'+pi)||pat.title),
+        reason: safeDec(val('ep_reason'+pi)||''),
+        phones: pat.phones.map(function(ph, j){
+          return {
+            plan: safeDec(val('ep_p'+pi+'_plan'+j)||''),
+            min:  safeDec(val('ep_p'+pi+'_min'+j)||''),
+            disc: safeDec(val('ep_p'+pi+'_disc'+j)||''),
+            saku: safeDec(val('ep_p'+pi+'_saku'+j)||'')
+          };
+        }),
+        net:{
+          plan: safeDec(val('ep_p'+pi+'_net_plan')||''),
+          fee:  safeDec(val('ep_p'+pi+'_net_fee')||''),
+          how:  safeDec(val('ep_p'+pi+'_net_how')||''),
+          saku: safeDec(val('ep_p'+pi+'_net_saku')||'')
+        },
+        points: safeDec(val('ep_p'+pi+'_points')||'')
+      };
+      return np;
+    });
+    if(!editedAnsData[editCase]) editedAnsData[editCase] = {patterns: newPatterns};
+    else editedAnsData[editCase].patterns = newPatterns;
+  } else if(editSubTab === 'customer'){
+    var base = getCaseData(editCase);
+    var newCas = JSON.parse(JSON.stringify(base));
+    newCas.phones.forEach(function(p, j){
+      var who = document.getElementById('ec_who'+j);
+      if(!who) return;
+      p.who = safeDec(who.value);
+      p.label = safeDec(document.getElementById('ec_label'+j).value);
+      p.plan = safeDec(document.getElementById('ec_plan'+j).value);
+      p.usage = safeDec(document.getElementById('ec_usage'+j).value);
+      p.fee = safeDec(document.getElementById('ec_fee'+j).value);
+      p.device = safeDec(document.getElementById('ec_device'+j).value);
+      p.dfee = safeDec(document.getElementById('ec_dfee'+j).value);
+    });
+    if(document.getElementById('ec_net_name')){
+      newCas.net.name = safeDec(document.getElementById('ec_net_name').value);
+      newCas.net.type = safeDec(document.getElementById('ec_net_type').value);
+      newCas.net.speed = safeDec(document.getElementById('ec_net_speed').value);
+      newCas.net.fee = safeDec(document.getElementById('ec_net_fee').value);
+      newCas.net.tel = safeDec(document.getElementById('ec_net_tel').value);
+      newCas.net.tv = safeDec(document.getElementById('ec_net_tv').value);
+      newCas.net.cost = safeDec(document.getElementById('ec_net_cost').value);
+      newCas.net.debt = safeDec(document.getElementById('ec_net_debt').value);
+      newCas.net.note = safeDec(document.getElementById('ec_net_note').value);
+    }
+    if(document.getElementById('ec_special')){
+      newCas.special = safeDec(document.getElementById('ec_special').value);
+    }
+    newCas.area.forEach(function(a, k){
+      var lbl = document.getElementById('ec_area_label'+k);
+      var val = document.getElementById('ec_area_val'+k);
+      if(!lbl || !val) return;
+      a[1] = safeDec(lbl.value);
+      a[0] = val.value === 'true' ? true : (val.value === 'false' ? false : val.value);
+    });
+    if(document.getElementById('ec_decisionlog')){
+      newCas.decisionLog = safeDec(document.getElementById('ec_decisionlog').value);
+    }
+    editedCases[editCase] = newCas;
+  } else if(editSubTab === 'quiz'){
+    var qa = getQuizData(editCase).slice();
+    qa = qa.map(function(q, qi){
+      var qEl = document.getElementById('eq_q'+qi);
+      if(!qEl) return q;
+      return {
+        q: safeDec(qEl.value),
+        a: document.getElementById('eq_a'+qi).value === 'true',
+        exp: safeDec(document.getElementById('eq_exp'+qi).value)
+      };
+    });
+    editedQuiz[editCase] = qa;
+  }
+}
+
+/* ============ 回答まとめ・FB ============ */
+function openReport(){
+  var jobs = CASES.map(function(_, i){ return loadCase(i); });
+  Promise.all(jobs).then(function(){
+    document.getElementById('reportBody').innerHTML = buildReportHTML();
+    document.getElementById('reportModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+}
+function closeReport(){
+  document.getElementById('reportModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function buildReportHTML(){
+  var totalCorrect = 0, totalCount = 0, touched = 0;
+  var marks = ['①','②','③'];
+  var caseHtml = '';
+
+  CASES.forEach(function(_cas0, i){
+    var cas = getCaseData(i);
+    var d = memCache[i];
+    if(!d || !d._touched) return;
+    touched++;
+
+    var rows = '';
+    cas.phones.forEach(function(p, j){
+      var b = d.blocks[j] || {};
+      var detail = [];
+      if(b.disc) detail.push('割引: ' + esc(b.disc));
+      if(b.callop && b.callop !== '（通話なし）') detail.push('通話OP: ' + esc(b.callop) + (b.callfee ? ' ' + b.callfee + '円' : ''));
+      if(b.card === 'つけない') detail.push('カード: つけない（' + (b.cardreason ? esc(b.cardreason) : '<span class="empty">理由未記入</span>') + '）');
+      else if(b.card && b.card.indexOf('dカード') === 0) detail.push('カード: ' + esc(b.card) + (b.cardfee ? ' 割引' + b.cardfee + '円' : '') + (b.cardmob ? ' モバイル還元' + b.cardmob + '%' : '') + (b.cardhikari ? ' 光還元' + b.cardhikari + '%' : ''));
+      if(b.saku) detail.push('施策: ' + esc(b.saku));
+      if(b.mustop) detail.push('必須OP・注意: ' + esc(b.mustop));
+      rows += '<tr><td>' + marks[j] + ' ' + p.who + '</td>'
+        + '<td>' + (b.plan ? esc(b.plan) : '<span class="empty">未選択</span>') + '</td>'
+        + '<td>' + (b.base ? b.base + '円' : '<span class="empty">未入力</span>') + '</td>'
+        + '<td>' + (b.min ? b.min + '円' : '<span class="empty">未入力</span>') + '</td>'
+        + '<td>' + (detail.length ? detail.join('<br>') : '<span class="empty">—</span>') + '</td></tr>';
+    });
+
+    var nb = d.blocks[cas.phones.length] || {};
+    var netDetail = [];
+    if(nb.how && nb.how !== '（未選択）') netDetail.push('変更方法: ' + esc(nb.how));
+    if(nb.kouji && nb.kouji !== '（未選択）'){
+      var k = '工事: ' + esc(nb.kouji);
+      if(nb.kouji === '工事あり') k += nb.koujifee ? '（' + nb.koujifee + '円）' : '（<span class="empty">工事費未記入</span>）';
+      if(nb.kouji === '工事なし') k += nb.koujitype && nb.koujitype !== '（未選択）' ? '（' + esc(nb.koujitype) + '）' : '（<span class="empty">種別未選択</span>）';
+      netDetail.push(k);
+    }
+    if(nb.hoten && nb.hoten !== '（未選択）') netDetail.push('解約金補填: ' + esc(nb.hoten));
+    if(nb.sakusel && nb.sakusel !== '（未選択）'){
+      var s = '施策: ' + esc(nb.sakusel);
+      if(nb.sakusel === 'KD20' || nb.sakusel === 'KD30') s += nb.cbfee ? '（CB ' + nb.cbfee + '円）' : '（<span class="empty">CB未記入</span>）';
+      netDetail.push(s);
+    }
+    rows += '<tr><td>④ 固定回線</td>'
+      + '<td>' + (nb.plan ? esc(nb.plan) : '<span class="empty">未選択</span>') + '</td>'
+      + '<td>' + (nb.base ? nb.base + '円' : '<span class="empty">—</span>') + '</td>'
+      + '<td>' + (nb.min ? nb.min + '円' : '<span class="empty">未入力</span>') + '</td>'
+      + '<td>' + (netDetail.length ? netDetail.join('<br>') : '<span class="empty">—</span>') + '</td></tr>';
+
+    var fb = [];
+    // 光のルーター金額チェック（docomo版）
+    if(nb.plan && nb.plan.indexOf('ドコモ光') === 0){
+      var base = parseInt(nb.base, 10), min = parseInt(nb.min, 10);
+      var is10g = nb.plan.indexOf('10ギガ') !== -1;
+      var expected = is10g ? base + 550 : base;
+      var label = is10g ? '基本料金＋専用ルーター550円' : '基本料金のみ（1Gルーター無料）';
+      if(!isNaN(base) && !isNaN(min)){
+        if(min === expected) fb.push('<span class="fb-ok">✓ 光の月額＝' + label + ' になっています</span>');
+        else fb.push('<span class="fb-ng">⚠ 光の月額が正しくありません（' + label + 'の場合、月額' + expected + '円のはず／入力は' + min + '円）</span>');
+      } else if(!isNaN(base) && isNaN(min)){
+        fb.push('<span class="fb-ng">⚠ 光プラン選択時は月額料金の入力が必要です（' + label + '）</span>');
+      }
+    }
+    // CB合計
+    if(d.cbtotal) fb.push('CB・還元合計の記入あり: <b>' + d.cbtotal + '円</b>');
+    else fb.push('<span class="fb-ng">⚠ CB・還元の合計金額が未記入です</span>');
+    // 未選択チェック
+    var unselected = [];
+    cas.phones.forEach(function(p, j){
+      var b = d.blocks[j] || {};
+      if(!b.plan || b.plan === '（未選択）') unselected.push(marks[j] + p.who);
+    });
+    if(!nb.plan || nb.plan === '（未選択）') unselected.push('④固定回線');
+    if(unselected.length) fb.push('<span class="fb-ng">⚠ プラン未選択: ' + unselected.join('、') + '</span>');
+
+    // クイズ
+    var quiz = d.quiz || [];
+    var correct = 0, answered = 0;
+    var quizLis = '';
+    var QZ = getQuizData(i);
+    QZ.forEach(function(q, qi){
+      var ansv = quiz[qi];
+      if(ansv === 'o' || ansv === 'x'){
+        answered++;
+        var isCorrect = (ansv === 'o') === q.a;
+        if(isCorrect){ correct++; totalCorrect++; }
+        totalCount++;
+        quizLis += '<li>Q' + (qi+1) + '. ' + q.q + ' → 回答: ' + (ansv==='o'?'○':'×') + ' '
+          + (isCorrect ? '<span class="fb-ok">○正解</span>' : '<span class="fb-ng">×不正解 — ' + q.exp + '</span>') + '</li>';
+      } else {
+        quizLis += '<li>Q' + (qi+1) + '. ' + q.q + ' → <span class="empty">未回答</span></li>';
+      }
+    });
+
+    caseHtml += '<div class="report-case">'
+      + '<h3>' + esc(cas.title) + '</h3>'
+      + '<table class="report-table"><tr><th></th><th>プラン・GB数</th><th>基本料金</th><th>最安値/基本料金</th><th>割引・施策・注意</th></tr>' + rows + '</table>'
+      + '<div class="report-reason"><b>提案理由メモ：</b>' + (d.reason ? esc(d.reason) : '<span class="empty">未記入</span>') + '</div>'
+      + '<div class="report-quiz"><b>注意事項クイズ：正答 ' + correct + ' / ' + answered + '（全' + QZ.length + '問）</b><ul>' + quizLis + '</ul></div>'
+      + '<div style="font-size:12px;margin-top:8px"><b>簡易チェック：</b><ul style="padding-left:18px;margin:6px 0">' + fb.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ul></div>'
+      + '</div>';
+  });
+
+  if(touched === 0){
+    return '<div class="report-empty">まだ回答が入力されたケースがありません。各ケースで入力すると、ここにまとめが表示されます。</div>';
+  }
+
+  var summary = '<div class="report-summary"><h2>総合結果</h2><table>'
+    + '<tr><td>取り組んだケース</td><td><b>' + touched + ' / ' + CASES.length + '</b></td></tr>'
+    + '<tr><td>注意事項クイズ正答率</td><td><b>' + totalCorrect + ' / ' + totalCount + (totalCount ? '（' + Math.round(totalCorrect/totalCount*100) + '%）' : '') + '</b></td></tr>'
+    + '</table>'
+    + '</div>';
+
+  return summary + caseHtml;
+}
+
+function saveEdits(){
+  flushEditorValues();
+  closeEditor();
+  buildSidebar();
+  if(cur === editCase){
+    loadCase(cur).then(function(saved){ buildMain(saved); });
+  }
+}
+
+function exportEdits(){
+  flushEditorValues();
+  var payload = {
+    ansData: editedAnsData,
+    cases: editedCases,
+    quiz: editedQuiz,
+    exportedAt: new Date().toLocaleString('ja-JP')
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '乗り換えサイト編集データ.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importEditsFile(input){
+  var file = input.files && input.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var data = JSON.parse(e.target.result);
+      if(data.ansData) Object.assign(editedAnsData, data.ansData);
+      if(data.cases) Object.assign(editedCases, data.cases);
+      if(data.quiz) Object.assign(editedQuiz, data.quiz);
+      alert('編集データを読み込みました（' + (data.exportedAt||'') + ' 書き出し分）');
+      renderEditTabs();
+      renderEditBody();
+      buildSidebar();
+      if(cur >= 0) loadCase(cur).then(function(saved){ buildMain(saved); });
+    }catch(err){
+      alert('読み込みに失敗しました。正しいJSONファイルか確認してください。');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function resetEdit(){
+  if(editSubTab === 'answer'){
+    if(!confirm('このケースの解答パターンをデフォルトに戻しますか？')) return;
+    delete editedAnsData[editCase];
+  } else if(editSubTab === 'customer'){
+    if(!confirm('このケースの顧客設定をデフォルトに戻しますか？')) return;
+    delete editedCases[editCase];
+  } else if(editSubTab === 'quiz'){
+    if(!confirm('このケースの注意事項クイズをデフォルトに戻しますか？')) return;
+    delete editedQuiz[editCase];
+  }
+  renderEditBody();
+  renderEditTabs();
+}
+
+
+/* ============ 起動：保存データを順次読み込み ============ */
+function preloadAll(){
+  var jobs = CASES.map(function(_, i){ return loadCase(i); });
+  Promise.all(jobs).then(function(){
+    return storageOK ? loadAllEdits() : Promise.resolve();
+  }).then(function(){
+    buildSidebar();
+    selectCase(0);
+  });
+}
+preloadAll();
+
+var KNOWLEDGE_DATA = {"sections": [{"icon": "📖", "title": "プラン知識", "items": [{"heading": "ドコモ MAX", "points": ["光セット割：▲1,210円（他社は1,100円が多い）", "DAZNが無料", "でんきセット割：▲110円", "U22：7か月間、30GBまで0円で利用可能（ボーナスパケット）", "U29：3か月間、同様の特典あり", "U15：対象者がいる場合、▲550円", "dカード GOLDで支払うと10％還元", "2回線：▲550円"]}, {"heading": "ahamo", "points": ["割引なしでも40GBで月額2,970円", "dカード GOLDで支払うと＋5GB", "かけ放題：1,100円（24時間かけ放題）", "海外：14日間利用可能", "ahamoは基本的に割引がない分、シンプルな料金体系", "ahamoデータ増量は1GBあたり550円"]}, {"heading": "家族間通話", "points": ["MAX → ahamo：家族間通話OK（無料）", "ahamo → MAX：有料", "ahamoのファミリー回線から発信すると有料"]}, {"heading": "ドコモメール", "points": ["MAX／ドコモの通常プラン → ahamoへ変更する場合、ドコモメールを引き継ぐには「ドコモメール持ち運び」が必要"]}, {"heading": "利用者登録の併用ルール", "points": ["U15 ＋ U22：同一利用者OK（2回線で同じ子を登録可能）", "キッズケータイ ＋ U22：同一利用者OK", "キッズケータイ ＋ U15：不可"]}]}, {"icon": "🛜", "title": "光の知識", "items": [{"heading": "ドコモ光", "points": ["ドコモ光 → 他社の光コラボ：「事業者変更」になる", "1ギガ → 10ギガ：解約新規扱い", "ホームルーター → 1ギガ／10ギガ：基本的に「解約新規」扱い", "ルーターレンタル：1ギガは無料、10ギガは550円"]}, {"heading": "固定電話", "points": ["番号ポータビリティで電話番号を引き継げる場合あり", "引き継ぎ可能：NTT発番、フレッツ光・光コラボのひかり電話の番号、他社固定電話", "引き継ぎ不可：NTT以外が独自発番した番号・050から始まる番号"]}, {"heading": "テレビ", "points": ["光テレビは事業者変更なら工事が入らないケースあり", "他社の光テレビの工事費は負担できる", "ドコモ側での光テレビの工事費はかかる（補填不可）", "解約→新規の場合は工事が必要", "ドコモ側でテレビ工事が発生する場合は、テレビの台数によって費用が変わる"]}, {"heading": "のりかえ特典", "points": ["Air → home 5Gの場合、20,000ptなどの特典あり", "10万ポイントはドコモ光にすると対象になる場合あり（キャンペーンは都度確認）"]}]}, {"icon": "💳", "title": "dカード GOLD", "items": [{"heading": "dカード GOLD", "points": ["年会費：11,000円", "申込完了後の請求タイミングは要確認", "ドコモ料金の支払いなどでポイント還元あり", "料金・キャンペーン・端末施策は変更されるので、実際の案内ではその時点の最新条件を確認"]}]}, {"icon": "🐶", "title": "他社系", "items": [{"heading": "⚠ 共通", "points": ["1年以内の解約は最大1,100円の違約金が発生する"]}, {"heading": "SoftBank／Y!mobile", "points": ["SoftBankはメールアドレスが複数種類ある → どのメールを使っているか確認", "メールアドレス持ち運びは有料：1メールアドレスにつき月額330円／年額3,300円", "LYPプレミアム：SoftBank／Y!mobileでは無料だが、ドコモへ変更すると有料になる場合あり", "@i.softbank.jp：SoftBankのiPhone向けメール", "Y!mobile → SoftBank：のりかえ特典あり", "Y!mobileは端末返却手数料22,000円のケースあり"]}, {"heading": "au／UQ", "points": ["ネットワークパックは支払い方法を設定しないと使えなくなる場合あり", "UQ → ドコモへの変更時は工事ありのケースあり", "J:COMは案内テストのケースとして通すことが多い", "UQメアド引き継ぎはできない（そもそも利用に月額220円かかる）"]}]}, {"icon": "📱", "title": "端末知識", "items": [{"heading": "iPhone", "points": ["iPhone 16：128GB／256GB　サイズ：6.1インチ", "iPhone 16は2年間実質33円などの端末施策あり（2年後の返却条件あり）", "iPhone 17：128GBなし、256GBスタート　サイズ：6.3インチ", "iPhone 17はPro以上ではない", "iPhone 14 → 15でカメラ性能が大きく向上", "カエドキプログラム：特典利用料ありの端末は返却しない場合に追加費用が発生→必ず説明"]}]}]};
+
+function openKnowledge(){
+  var modal = document.getElementById('knowledgeModal');
+  var content = document.getElementById('knowledgeContent');
+  
+  var html = '';
+  KNOWLEDGE_DATA.sections.forEach(function(sec){
+    html += '<div style="margin-bottom:24px">';
+    html += '<h3 style="color:#cc0000;font-size:16px;margin:0 0 12px;background:#f5e6e6;padding:8px 12px;border-radius:6px">' + sec.icon + ' ' + sec.title + '</h3>';
+    sec.items.forEach(function(item){
+      html += '<div style="margin-bottom:12px">';
+      html += '<div style="font-weight:600;font-size:14px;color:#1a1a1a;margin-bottom:4px;padding-left:4px;border-left:3px solid #cc0000;padding-left:8px">■ ' + item.heading + '</div>';
+      html += '<ul style="margin:4px 0 0 16px;padding:0">';
+      item.points.forEach(function(p){
+        html += '<li style="font-size:13px;color:#333;margin-bottom:3px;line-height:1.6">' + p + '</li>';
+      });
+      html += '</ul></div>';
+    });
+    html += '</div>';
+  });
+  
+  content.innerHTML = html;
+  modal.style.display = 'block';
+}
+
+</script>
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-box" style="max-width:920px">
+    <div class="modal-head">
+      <h2>📋 回答まとめ・フィードバック</h2>
+      <div style="display:flex;gap:8px">
+        <button class="ghost" onclick="window.print()">🖨 印刷/PDF保存</button>
+        <button class="ghost" onclick="closeReport()">✕ 閉じる</button>
+      </div>
+    </div>
+    <div class="modal-body" id="reportBody"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>✏️ 模範解答の編集 <span style="font-size:11px;font-weight:400;color:var(--warn);background:#fff3cd;padding:2px 7px;border-radius:10px;margin-left:6px">⚠ 編集内容はこの画面上のみ。配布するにはJSONを書き出してください</span></h2>
+      <button class="ghost" onclick="closeEditor()">✕ 閉じる</button>
+    </div>
+    <div class="modal-tabs" id="editTabs"></div>
+    <div class="modal-tabs" id="editSubTabs" style="border-top:1px solid var(--line)"></div>
+    <div class="modal-body" id="editBody"></div>
+    <div class="modal-foot" style="flex-wrap:wrap">
+      <span class="edit-stat" id="editStat"></span>
+      <label class="ghost" style="cursor:pointer;display:inline-flex;align-items:center">📤 JSONを読み込み<input type="file" accept="application/json" style="display:none" onchange="importEditsFile(this)"></label>
+      <button class="ghost" onclick="exportEdits()">📥 編集データをJSONで書き出し</button>
+      <button class="ghost" onclick="resetEdit()">このケースをリセット</button>
+      <button class="act" onclick="saveEdits()">✓ この内容を反映して閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 知識チェックリスト モーダル -->
+<div id="knowledgeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;overflow-y:auto">
+<div style="background:#fff;max-width:860px;margin:40px auto;border-radius:12px;padding:32px 36px;position:relative">
+  <button onclick="document.getElementById('knowledgeModal').style.display='none'"
+    style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#666">✕</button>
+  <h2 style="margin:0 0 20px;color:#cc0000;font-size:20px;border-bottom:3px solid #cc0000;padding-bottom:8px">💡 クローザーテスト 知識チェックリスト</h2>
+  <div id="knowledgeContent"></div>
+</div>
+</div>
+
+</body>
+</html>
