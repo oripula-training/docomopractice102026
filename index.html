@@ -222,6 +222,20 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
 .coach-input{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:#fff;align-items:flex-end}
 .coach-input textarea{min-height:52px;max-height:140px;resize:vertical}
 .coach-input-actions{display:flex;gap:6px;flex-direction:column}
+.coach-topics{padding:10px 16px;border-bottom:1px solid var(--line);background:#fff}
+.coach-topics-title{font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:7px}
+.coach-topic-list{display:flex;gap:6px;flex-wrap:wrap}
+.coach-topic-btn{border:1px solid var(--line);background:#fff;color:var(--ink2);border-radius:16px;padding:6px 10px;font-size:11px;cursor:pointer}
+.coach-topic-btn.on{background:var(--sb);border-color:var(--sb);color:#fff;font-weight:700}
+.coach-question{padding:12px 16px;background:#f7f9fb;border-bottom:1px solid var(--line)}
+.coach-question-label{font-size:10px;color:var(--ink3);font-weight:700;margin-bottom:4px}
+.coach-question-text{font-size:13px;line-height:1.6;font-weight:600}
+.coach-voicebar{display:flex;gap:8px;align-items:center;padding:10px 16px;background:#fff;border-top:1px solid var(--line)}
+.coach-mic{flex:1;border:none;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:700;background:#cc0000;color:#fff;cursor:pointer}
+.coach-mic.listening{background:#8b0000;box-shadow:0 0 0 4px rgba(204,0,0,.12)}
+.coach-voice-status{font-size:11px;color:var(--ink3);min-width:110px;text-align:center}
+.coach-send-voice{padding:12px 14px}
+.coach-transcript-label{font-size:10px;font-weight:700;color:var(--ink3);padding:8px 16px 0;background:#fff}
 .coach-score{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:10px}
 .coach-score strong{font-size:24px;color:var(--sb)}
 .coach-note{font-size:11px;color:var(--ink3);padding:0 16px 12px;background:#fff}
@@ -234,6 +248,10 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
   .coach-chat{height:55vh}
   .coach-bubble{max-width:92%}
   .coach-input{flex-direction:column}
+  .coach-voicebar{flex-wrap:wrap}
+  .coach-mic{width:100%;flex-basis:100%}
+  .coach-voice-status{flex:1}
+  .coach-topic-btn{flex:1 1 calc(50% - 6px);text-align:center}
   .coach-input-actions{width:100%;flex-direction:row}
   .coach-input-actions button{flex:1}
 }
@@ -1467,6 +1485,17 @@ var coachHistory = [];
 var coachStage = 0;
 var coachBusy = false;
 var coachTraineeAnswer = null;
+var coachTopic = 'plan';
+var coachRecognition = null;
+var coachListening = false;
+var coachFinalTranscript = '';
+var COACH_TOPICS = [
+  {id:'plan', label:'📱 着地・GB', stage:0, q:'各回線の着地プラン・GB数を説明してください。複数回線ある場合は全員分お願いします。'},
+  {id:'net', label:'🛜 固定回線', stage:1, q:'固定回線をどう着地させますか？変更なし・新規・事業者変更・解約新規まで含めて説明してください。'},
+  {id:'campaign', label:'💰 施策・CB', stage:2, q:'適用する施策・CB金額・還元方法を説明してください。セブン銀行・店舗ポイント・開通後なども区別してください。'},
+  {id:'oral', label:'🗣️ 口頭案内', stage:3, q:'契約前に必ず説明・確認しておく注意事項を、お客様へ実際に案内するつもりで説明してください。'},
+  {id:'summary', label:'✅ 最終まとめ', stage:4, q:'このケースの提案全体を、着地・固定回線・施策・注意事項までまとめて説明してください。'}
+];
 
 var COACH_STAGE_LABELS = ['着地・GB','固定回線','施策・CB','口頭案内','合否判定'];
 
@@ -1570,16 +1599,105 @@ function coachAdd(role,text){
   wrap.scrollTop=wrap.scrollHeight;
 }
 
+function renderCoachTopics(){
+  var wrap=document.getElementById('coachTopicList');
+  if(!wrap) return;
+  wrap.innerHTML=COACH_TOPICS.map(function(t){
+    return '<button class="coach-topic-btn'+(t.id===coachTopic?' on':'')+'" onclick="selectCoachTopic(\''+t.id+'\')">'+t.label+'</button>';
+  }).join('');
+  updateCoachQuestion();
+}
+
+function getCoachTopic(){
+  return COACH_TOPICS.find(function(t){return t.id===coachTopic;}) || COACH_TOPICS[0];
+}
+
+function selectCoachTopic(id){
+  coachTopic=id;
+  var t=getCoachTopic();
+  setCoachStage(t.stage);
+  renderCoachTopics();
+  coachAdd('ai','では「'+t.label.replace(/^.. /,'')+'」を確認します。\n'+t.q);
+  var input=document.getElementById('coachInput');
+  if(input){ input.value=''; input.focus(); }
+}
+
+function updateCoachQuestion(){
+  var el=document.getElementById('coachQuestionText');
+  if(el) el.textContent=getCoachTopic().q;
+}
+
+function initCoachSpeech(){
+  var SR=window.SpeechRecognition || window.webkitSpeechRecognition;
+  var mic=document.getElementById('coachMic');
+  var status=document.getElementById('coachVoiceStatus');
+  if(!SR){
+    if(mic){ mic.disabled=true; mic.textContent='🎙️ 音声入力非対応'; }
+    if(status) status.textContent='文字入力をご利用ください';
+    return;
+  }
+  coachRecognition=new SR();
+  coachRecognition.lang='ja-JP';
+  coachRecognition.continuous=true;
+  coachRecognition.interimResults=true;
+
+  coachRecognition.onstart=function(){
+    coachListening=true;
+    coachFinalTranscript=(document.getElementById('coachInput').value||'').trim();
+    if(mic){ mic.classList.add('listening'); mic.textContent='⏹ 回答終了'; }
+    if(status) status.textContent='聞き取り中…';
+  };
+  coachRecognition.onresult=function(e){
+    var interim='';
+    var finalAdd='';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      var tx=e.results[i][0].transcript;
+      if(e.results[i].isFinal) finalAdd+=tx;
+      else interim+=tx;
+    }
+    if(finalAdd) coachFinalTranscript+=(coachFinalTranscript?' ':'')+finalAdd;
+    var input=document.getElementById('coachInput');
+    if(input) input.value=(coachFinalTranscript+(interim?' '+interim:'')).trim();
+  };
+  coachRecognition.onerror=function(e){
+    coachListening=false;
+    if(mic){ mic.classList.remove('listening'); mic.textContent='🎙️ 回答開始'; }
+    if(status) status.textContent=e.error==='not-allowed'?'マイク許可が必要です':'音声入力エラー';
+  };
+  coachRecognition.onend=function(){
+    coachListening=false;
+    if(mic){ mic.classList.remove('listening'); mic.textContent='🎙️ 回答開始'; }
+    if(status) status.textContent='文字起こしを確認 → AIに送信';
+  };
+}
+
+function toggleCoachMic(){
+  if(!coachRecognition) initCoachSpeech();
+  if(!coachRecognition) return;
+  if(coachListening){
+    coachRecognition.stop();
+  }else{
+    try{ coachRecognition.start(); }catch(e){}
+  }
+}
+
+function sendCoachVoice(){
+  if(coachListening && coachRecognition) coachRecognition.stop();
+  window.setTimeout(function(){ sendCoach(); }, coachListening?250:0);
+}
+
 function startCoach(){
   coachHistory=[];
   coachStage=0;
+  coachTopic='plan';
   setCoachStage(0);
   document.getElementById('coachChat').innerHTML='';
   document.getElementById('coachInput').value='';
   coachTraineeAnswer = captureCoachAnswer();
   document.getElementById('coachCaseView').innerHTML=coachCaseHTML(coachCase);
-  var c=getCaseData(coachCase);
-  coachAdd('ai','本番形式でケース'+(coachCase+1)+'を確認します。顧客設定は左側を見ながら回答してください。\n\nまず、各回線の「着地プラン・GB数」を答えてください。複数回線ある場合は全員分お願いします。');
+  renderCoachTopics();
+  initCoachSpeech();
+  coachAdd('ai','本番形式でケース'+(coachCase+1)+'を確認します。左の顧客設定を見ながら、上の「話す項目」を選び、🎙️回答開始から口頭で答えてください。\n\nまずは「着地・GB」から始めます。');
   document.getElementById('coachStatus').textContent=COACH_API_URL?'AI接続':'ローカル講師モード';
 }
 
@@ -1653,13 +1771,20 @@ async function sendCoach(){
           history:coachHistory.slice(-16),
           stage:coachStage,
           traineeAnswer:coachTraineeAnswer,
+          topic:coachTopic,
+          topicLabel:getCoachTopic().label,
           mode:'exam-check'
         })
       });
       if(!resp.ok) throw new Error('API '+resp.status);
       var data=await resp.json();
       reply=data.reply||'';
-      if(typeof data.stage==='number') setCoachStage(data.stage);
+      if(typeof data.stage==='number'){
+        setCoachStage(data.stage);
+        var nextTopic=COACH_TOPICS.find(function(t){return t.stage===data.stage;});
+        if(nextTopic && coachTopic!=='summary') coachTopic=nextTopic.id;
+        renderCoachTopics();
+      }
     }
     if(!reply) reply=localCoachReply(text);
     coachHistory.push({role:'assistant',content:reply});
@@ -1742,15 +1867,29 @@ function openKnowledge(){
     <div class="coach-workspace">
       <section class="coach-casepane"><div id="coachCaseView"></div></section>
       <section class="coach-chatpane">
+        <div class="coach-topics">
+          <div class="coach-topics-title">話す項目を選択</div>
+          <div class="coach-topic-list" id="coachTopicList"></div>
+        </div>
+        <div class="coach-question">
+          <div class="coach-question-label">今回の質問</div>
+          <div class="coach-question-text" id="coachQuestionText"></div>
+        </div>
         <div class="coach-chat" id="coachChat"></div>
+        <div class="coach-voicebar">
+          <button class="coach-mic" id="coachMic" onclick="toggleCoachMic()">🎙️ 回答開始</button>
+          <span class="coach-voice-status" id="coachVoiceStatus">マイクで回答できます</span>
+          <button class="act coach-send-voice" onclick="sendCoachVoice()">AIに送信</button>
+        </div>
+        <div class="coach-transcript-label">文字起こし（必要なら修正できます）</div>
         <div class="coach-input">
-          <textarea id="coachInput" placeholder="本番のつもりで回答してください。Enterで送信 / Shift+Enterで改行" onkeydown="coachKeydown(event)"></textarea>
+          <textarea id="coachInput" placeholder="音声の文字起こしがここに入ります。文字入力でも回答できます。" onkeydown="coachKeydown(event)"></textarea>
           <div class="coach-input-actions">
             <button class="ghost" onclick="coachHint()">練習ヒント</button>
-            <button class="act" id="coachSend" onclick="sendCoach()">送信</button>
+            <button class="act" id="coachSend" onclick="sendCoach()">文字で送信</button>
           </div>
         </div>
-        <div class="coach-note">顧客設定は本番同様、最初からすべて確認できます。AI講師は採点者として、着地→固定回線→施策→口頭案内の順で確認します。</div>
+        <div class="coach-note">顧客設定は本番同様、最初から確認できます。項目を選んで口頭回答 → 文字起こし確認 → AI採点・深掘り、の順で進みます。</div>
       </section>
     </div>
   </div>
