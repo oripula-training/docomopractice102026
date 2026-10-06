@@ -189,9 +189,22 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
   .ansbody table{min-width:540px}
 }
 
-/* ===== AI壁打ち講師 ===== */
+/* ===== AI講師チェック講師 ===== */
 .coach-launch{white-space:nowrap;background:#cc0000!important}
-.coach-modal{max-width:940px}
+.coach-modal{max-width:1180px}
+.coach-workspace{display:grid;grid-template-columns:minmax(360px,44%) 1fr;min-height:620px}
+.coach-casepane{border-right:1px solid var(--line);background:#fff;overflow-y:auto;max-height:68vh;padding:16px}
+.coach-chatpane{display:flex;flex-direction:column;min-width:0}
+.coach-case-title{font-size:16px;font-weight:700;margin-bottom:10px}
+.coach-case-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.coach-case-card{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fafafa}
+.coach-case-card h4{font-size:12px;margin:0 0 7px;color:var(--sb)}
+.coach-case-row{display:grid;grid-template-columns:78px 1fr;gap:6px;font-size:11px;line-height:1.55;margin-bottom:3px}
+.coach-case-row b{color:var(--ink3);font-weight:600}
+.coach-case-special{margin-top:10px;padding:10px;border-radius:8px;background:#fff5f5;border:1px solid #f1caca;font-size:11px;line-height:1.65}
+.coach-case-area{margin-top:10px;padding:10px;border-radius:8px;background:#f7f9fb;border:1px solid var(--line);font-size:11px;line-height:1.65}
+.coach-answer-snapshot{margin-top:10px;padding:10px;border:1px dashed var(--line);border-radius:8px;font-size:11px;background:#fff}
+.coach-answer-snapshot summary{cursor:pointer;font-weight:600}
 .coach-setup{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg)}
 .coach-setup label{font-size:12px;font-weight:600;color:var(--ink2)}
 .coach-setup select{width:auto;min-width:210px}
@@ -199,7 +212,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
 .coach-progress{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
 .coach-step{font-size:10px;padding:3px 8px;border-radius:12px;background:var(--bg);color:var(--ink3);border:1px solid var(--line)}
 .coach-step.on{background:var(--sb-light);color:var(--sb);border-color:#bcdcf3;font-weight:600}
-.coach-chat{height:min(58vh,560px);overflow-y:auto;padding:16px;background:#fafafa}
+.coach-chat{flex:1;min-height:410px;max-height:53vh;overflow-y:auto;padding:16px;background:#fafafa}
 .coach-msg{display:flex;margin-bottom:12px}
 .coach-msg.user{justify-content:flex-end}
 .coach-bubble{max-width:82%;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.7;white-space:pre-wrap}
@@ -213,6 +226,9 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
 .coach-score strong{font-size:24px;color:var(--sb)}
 .coach-note{font-size:11px;color:var(--ink3);padding:0 16px 12px;background:#fff}
 @media(max-width:760px){
+  .coach-workspace{grid-template-columns:1fr;min-height:0}
+  .coach-casepane{border-right:0;border-bottom:1px solid var(--line);max-height:42vh}
+  .coach-case-grid{grid-template-columns:1fr}
   .coach-setup select{width:100%}
   .coach-status{width:100%;margin-left:0}
   .coach-chat{height:55vh}
@@ -230,7 +246,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
   <span class="badge" style="background:#cc0000">docomo</span>
   <h1>docomo版 乗り換え提案 練習サイト</h1>
   <span class="note" style="white-space:nowrap">docomo着地版 2026年8月施策反映</span>
-  <button class="act coach-launch" style="font-size:12px;padding:6px 12px" onclick="openCoach()">🤖 AI壁打ち</button>
+  <button class="act coach-launch" style="font-size:12px;padding:6px 12px" onclick="openCoach()">🎓 AI講師チェック</button>
   <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openEditor()">✏️ 解答編集</button>
   <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openReport()">📋 回答まとめ</button>
   <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openKnowledge()">💡 知識チェック</button>
@@ -1444,14 +1460,15 @@ function preloadAll(){
 preloadAll();
 
 
-/* ============ AI壁打ち講師 ============ */
+/* ============ AI講師チェック講師 ============ */
 var COACH_API_URL = 'https://docomopractice102026-ai.vercel.app/api/coach';
 var coachCase = 0;
 var coachHistory = [];
 var coachStage = 0;
 var coachBusy = false;
+var coachTraineeAnswer = null;
 
-var COACH_STAGE_LABELS = ['ヒアリング','状況整理','提案','根拠確認','採点'];
+var COACH_STAGE_LABELS = ['着地・GB','固定回線','施策・CB','口頭案内','合否判定'];
 
 function getCoachCaseContext(i){
   var c=getCaseData(i);
@@ -1468,9 +1485,56 @@ function getCoachCaseContext(i){
   };
 }
 
+function coachCaseHTML(i){
+  var c=getCaseData(i);
+  var html='<div class="coach-case-title">'+esc(c.title)+'</div>';
+  html+='<div style="font-size:11px;color:var(--ink3);margin-bottom:10px">顧客設定は本番同様、最初からすべて確認できます。</div>';
+  html+='<div class="coach-case-grid">';
+  c.phones.forEach(function(p){
+    html+='<div class="coach-case-card"><h4>📱 '+esc(p.who)+'</h4>'
+      +'<div class="coach-case-row"><b>キャリア</b><span>'+esc(p.label)+'</span></div>'
+      +'<div class="coach-case-row"><b>プラン</b><span>'+esc(p.plan)+'</span></div>'
+      +'<div class="coach-case-row"><b>利用量</b><span>'+esc(p.usage)+'</span></div>'
+      +'<div class="coach-case-row"><b>月額</b><span>'+esc(p.fee)+'</span></div>'
+      +'<div class="coach-case-row"><b>端末</b><span>'+esc(p.device)+'</span></div>'
+      +'<div class="coach-case-row"><b>端末代</b><span>'+esc(p.dfee)+'</span></div></div>';
+  });
+  function netCard(n,label){
+    if(!n) return '';
+    return '<div class="coach-case-card"><h4>🛜 '+label+'</h4>'
+      +'<div class="coach-case-row"><b>回線名</b><span>'+esc(n.name)+'</span></div>'
+      +'<div class="coach-case-row"><b>種別</b><span>'+esc(n.type)+'</span></div>'
+      +'<div class="coach-case-row"><b>速度</b><span>'+esc(n.speed)+'</span></div>'
+      +'<div class="coach-case-row"><b>月額</b><span>'+esc(n.fee)+'</span></div>'
+      +'<div class="coach-case-row"><b>固定電話</b><span>'+esc(n.tel)+'</span></div>'
+      +'<div class="coach-case-row"><b>テレビ</b><span>'+esc(n.tv)+'</span></div>'
+      +'<div class="coach-case-row"><b>工事費</b><span>'+esc(n.cost)+'</span></div>'
+      +'<div class="coach-case-row"><b>残債</b><span>'+esc(n.debt)+'</span></div>'
+      +'<div class="coach-case-row"><b>備考</b><span>'+esc(n.note)+'</span></div></div>';
+  }
+  html+=netCard(c.net,'自宅回線①')+netCard(c.net2,'自宅回線②')+'</div>';
+  html+='<div class="coach-case-special"><b>🔒 特記・制約事項</b><br>'+esc(c.special)+'</div>';
+  if(c.area && c.area.length){
+    html+='<div class="coach-case-area"><b>📍 エリア検索結果</b><br>'
+      +c.area.map(function(a){return esc(a[1])+'：'+esc(dotMark(a[0]));}).join(' ／ ')+'</div>';
+  }
+  if(coachTraineeAnswer){
+    html+='<details class="coach-answer-snapshot"><summary>✏️ いま入力している回答を見る</summary><pre style="white-space:pre-wrap;font-family:inherit;margin:8px 0 0">'+esc(JSON.stringify(coachTraineeAnswer,null,2))+'</pre></details>';
+  }
+  return html;
+}
+
+function captureCoachAnswer(){
+  try{
+    if(cur===coachCase && document.getElementById('main')) return collect();
+  }catch(e){}
+  return memCache[coachCase] || null;
+}
+
 function openCoach(){
   coachCase = cur >= 0 ? cur : 0;
   document.getElementById('coachCaseSelect').value=String(coachCase);
+  coachTraineeAnswer = captureCoachAnswer();
   document.getElementById('coachModal').classList.add('open');
   startCoach();
 }
@@ -1512,13 +1576,16 @@ function startCoach(){
   setCoachStage(0);
   document.getElementById('coachChat').innerHTML='';
   document.getElementById('coachInput').value='';
+  coachTraineeAnswer = captureCoachAnswer();
+  document.getElementById('coachCaseView').innerHTML=coachCaseHTML(coachCase);
   var c=getCaseData(coachCase);
-  coachAdd('ai','ケース'+(coachCase+1)+'を始めます。\n「'+c.title+'」\n\nまず、このお客様に対して何を確認しますか？');
+  coachAdd('ai','本番形式でケース'+(coachCase+1)+'を確認します。顧客設定は左側を見ながら回答してください。\n\nまず、各回線の「着地プラン・GB数」を答えてください。複数回線ある場合は全員分お願いします。');
   document.getElementById('coachStatus').textContent=COACH_API_URL?'AI接続':'ローカル講師モード';
 }
 
 function changeCoachCase(){
   coachCase=parseInt(document.getElementById('coachCaseSelect').value,10);
+  coachTraineeAnswer = coachCase===cur ? captureCoachAnswer() : (memCache[coachCase]||null);
   startCoach();
 }
 
@@ -1530,95 +1597,38 @@ function randomCoachCase(){
 
 function coachHint(){
   var hints=[
-    '提案を決める前に、現在の利用量・困りごと・家族構成・固定回線の状況から、今回の判断に必要な項目を1つ選んで聞いてみましょう。',
-    '「今の契約容量」ではなく「実際に使っている量」や「いつから使いたいか」が判断材料になるケースがあります。',
-    '料金だけでなく、適用条件・端末残債・固定回線の変更方法・本人確認書類まで考えてみてください。'
+    '着地プランは、各回線の実利用GB・年齢・現在の契約条件を見て決めます。',
+    '固定回線は「変更なし／新規／事業者変更／解約新規」まで答えてください。',
+    '施策はCB金額だけでなく「セブン銀行・店舗ポイント・開通後」など還元方法までセットで確認します。',
+    '口頭案内では、端末残債・メール・返却条件・必要書類・解約時の注意など、このケース特有の説明漏れを確認します。'
   ];
-  coachAdd('ai','ヒント：'+hints[Math.min(coachStage,hints.length-1)]);
+  coachAdd('ai','練習ヒント：'+hints[Math.min(coachStage,hints.length-1)]);
 }
 
 function localCoachReply(text){
-  var t=(text||'').toLowerCase();
-  var c=coachCase;
   if(/答え|正解|模範/.test(text)){
+    var pat=getAnsPatterns(coachCase)[0];
     setCoachStage(4);
-    var pat=getAnsPatterns(c)[0];
-    return '模範解答に進みます。\n\n'+pat.title+'\n提案理由：'+pat.reason+'\n\n判断ポイント：\n'+pat.points+'\n\n最後に、自分の回答との違いを1つ言語化してみてください。';
-  }
-  if(c===2){
-    if(coachStage===0){
-      if(/いつ|時期|今日|すぐ|wifi|wi-fi|固定|光|home/.test(t)){
-        setCoachStage(1);
-        return 'いい視点です。固定回線は「いつから使いたいか」が重要です。では、お客様が「今日から使いたい」と答えた場合、何を提案しますか？理由も教えてください。';
-      }
-      return 'その確認も必要です。今回、引越し直後でWi-Fiがない点に注目すると、固定回線についてもう1つ確認したいことがあります。何でしょう？';
-    }
-    if(coachStage===1){
-      if(/home\s*5g|ホーム.?5g/.test(t)){
-        setCoachStage(2);
-        return 'home 5Gですね。なぜドコモ光ではなくhome 5Gを選びましたか？';
-      }
-      return '利用開始時期とのつながりを考えてみましょう。「今日から使う」が条件なら、工事を待たずに使える選択肢は何ですか？';
-    }
-    if(coachStage===2){
-      setCoachStage(3);
-      return '根拠が整理できています。では逆に、お客様が約3週間待てる場合は何を提案できますか？開通までの補助手段もあれば答えてください。';
-    }
-    if(coachStage===3){
-      setCoachStage(4);
-      return 'その考え方でOKです。ケース3はhome 5Gだけが正解ではありません。今日からならhome 5G、約3週間待てるならドコモ光も提案可能で、開通までポケットWi-Fiが提供される場合があります。\n\n次はスマホ側の提案根拠まで説明してみましょう。';
-    }
-  }
-  if(c===4){
-    if(coachStage===0){
-      if(/年齢|何歳|歳/.test(text)){
-        setCoachStage(1);
-        return 'お子さんは14歳です。14歳という条件から、使える子ども向け施策・プランをどう考えますか？';
-      }
-      return 'このケースではお子さんの条件がプラン選択に直結します。まず何を確認しますか？';
-    }
-    if(coachStage<=2){
-      setCoachStage(coachStage+1);
-      return '14歳なのでU15対象です。プラン名だけでなく、U15とU22の利用者登録をどう使うか、誰の回線にどの割引を付けるかまで説明してください。';
-    }
-  }
-  if(c===5){
-    if(coachStage===0){
-      if(/利用|何gb|ギガ|gb/.test(t)){
-        setCoachStage(1);
-        return '孫は20GB契約ですが、実際の利用量は4GBです。契約容量と実利用量のどちらを基準に提案しますか？';
-      }
-      return '孫のプランを決める前に、現在の「契約容量」だけでなく何を確認するとよいでしょう？';
-    }
-    if(coachStage<=2){
-      if(/mini|4gb|4 gb/.test(t)){
-        setCoachStage(3);
-        return 'その方向です。なぜ20GBプランではなくdocomo mini 4GBでよいのか、お客様に説明するつもりで根拠を答えてください。';
-      }
-      return '孫は「20GB契約・4GB利用」です。実利用量を基準にすると、どのプランが適切でしょう？';
-    }
-    if(coachStage===3){
-      setCoachStage(4);
-      return 'OKです。ケース6では、契約容量20GBではなく実利用4GBを見てdocomo mini 4GBへ落とす判断が重要です。固定回線や別居家族の書類条件まで抜けていないか確認しましょう。';
-    }
+    return '模範解答を確認します。\n\n'+pat.title+'\n提案理由：'+pat.reason+'\n\n判断ポイント：\n'+pat.points;
   }
   if(coachStage===0){
     setCoachStage(1);
-    return 'いいですね。その確認結果を踏まえたとき、次に確認すべきことを1つ挙げてください。料金プランを決めるのに必要な情報を優先しましょう。';
+    return '次です。固定回線はどう着地させますか？「変更なし／新規／事業者変更／解約新規」まで含めて答えてください。';
   }
   if(coachStage===1){
     setCoachStage(2);
-    return 'では、ここまでの情報を整理して、スマホ・固定回線・付帯施策を含めた提案を一度組み立ててください。';
+    return '次に、適用する施策・CBを答えてください。金額だけでなく、還元方法（セブン銀行・店舗ポイント・開通後など）まで説明してください。';
   }
   if(coachStage===2){
     setCoachStage(3);
-    return '提案ありがとうございます。なぜそのプラン・GB数にしたのか、現在の利用量や適用条件を根拠に説明してください。';
+    return '最後の口頭案内です。このお客様に契約前に必ず説明・確認しておく注意事項を、本番でお客様へ話すつもりで説明してください。';
   }
   if(coachStage===3){
     setCoachStage(4);
-    return '最後に自己点検です。①ヒアリング漏れ ②料金/GB ③固定回線 ④割引条件 ⑤危険な誤案内、の5点で自分の提案を見直してみてください。「答え教えて」で模範解答も確認できます。';
+    var p=getAnsPatterns(coachCase)[0];
+    return '口頭確認は以上です。\n\n本番では「プラン/GB」「固定回線の変更方法」「CB金額・還元方法」「口頭案内」のどれかに重大な誤りがあれば一発アウトです。\n模範解答の判断ポイント：\n'+p.points+'\n\n「答え教えて」で模範解答全体を確認できます。';
   }
-  return '続けて、判断根拠をもう一段具体的にしてください。';
+  return '判定済みです。必要なら「答え教えて」で模範解答を確認してください。';
 }
 
 async function sendCoach(){
@@ -1641,7 +1651,9 @@ async function sendCoach(){
         body:JSON.stringify({
           caseContext:getCoachCaseContext(coachCase),
           history:coachHistory.slice(-16),
-          stage:coachStage
+          stage:coachStage,
+          traineeAnswer:coachTraineeAnswer,
+          mode:'exam-check'
         })
       });
       if(!resp.ok) throw new Error('API '+resp.status);
@@ -1702,7 +1714,7 @@ function openKnowledge(){
 <div class="modal-overlay" id="coachModal">
   <div class="modal-box coach-modal">
     <div class="modal-head">
-      <h2>🤖 AI壁打ち講師</h2>
+      <h2>🎓 AI講師チェック <span style="font-size:11px;font-weight:400;color:var(--ink3)">本番形式</span></h2>
       <button class="ghost" onclick="closeCoach()">✕ 閉じる</button>
     </div>
     <div class="coach-setup">
@@ -1721,21 +1733,26 @@ function openKnowledge(){
       <span class="coach-status" id="coachStatus">ローカル講師モード</span>
     </div>
     <div class="coach-progress" id="coachProgress">
-      <span class="coach-step on">1 ヒアリング</span>
-      <span class="coach-step">2 状況整理</span>
-      <span class="coach-step">3 提案</span>
-      <span class="coach-step">4 根拠確認</span>
-      <span class="coach-step">5 採点</span>
+      <span class="coach-step on">1 着地・GB</span>
+      <span class="coach-step">2 固定回線</span>
+      <span class="coach-step">3 施策・CB</span>
+      <span class="coach-step">4 口頭案内</span>
+      <span class="coach-step">5 合否判定</span>
     </div>
-    <div class="coach-chat" id="coachChat"></div>
-    <div class="coach-input">
-      <textarea id="coachInput" placeholder="講師に回答してください。Enterで送信 / Shift+Enterで改行" onkeydown="coachKeydown(event)"></textarea>
-      <div class="coach-input-actions">
-        <button class="ghost" onclick="coachHint()">ヒント</button>
-        <button class="act" id="coachSend" onclick="sendCoach()">送信</button>
-      </div>
+    <div class="coach-workspace">
+      <section class="coach-casepane"><div id="coachCaseView"></div></section>
+      <section class="coach-chatpane">
+        <div class="coach-chat" id="coachChat"></div>
+        <div class="coach-input">
+          <textarea id="coachInput" placeholder="本番のつもりで回答してください。Enterで送信 / Shift+Enterで改行" onkeydown="coachKeydown(event)"></textarea>
+          <div class="coach-input-actions">
+            <button class="ghost" onclick="coachHint()">練習ヒント</button>
+            <button class="act" id="coachSend" onclick="sendCoach()">送信</button>
+          </div>
+        </div>
+        <div class="coach-note">顧客設定は本番同様、最初からすべて確認できます。AI講師は採点者として、着地→固定回線→施策→口頭案内の順で確認します。</div>
+      </section>
     </div>
-    <div class="coach-note">最初から答えは出しません。回答の根拠・ヒアリング漏れ・誤案内リスクを講師役が1問ずつ深掘りします。</div>
   </div>
 </div>
 
