@@ -188,6 +188,40 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
   .qbtn{width:52px;height:44px}
   .ansbody table{min-width:540px}
 }
+
+/* ===== AI壁打ち講師 ===== */
+.coach-launch{white-space:nowrap;background:#cc0000!important}
+.coach-modal{max-width:940px}
+.coach-setup{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg)}
+.coach-setup label{font-size:12px;font-weight:600;color:var(--ink2)}
+.coach-setup select{width:auto;min-width:210px}
+.coach-status{font-size:11px;color:var(--ink3);margin-left:auto}
+.coach-progress{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+.coach-step{font-size:10px;padding:3px 8px;border-radius:12px;background:var(--bg);color:var(--ink3);border:1px solid var(--line)}
+.coach-step.on{background:var(--sb-light);color:var(--sb);border-color:#bcdcf3;font-weight:600}
+.coach-chat{height:min(58vh,560px);overflow-y:auto;padding:16px;background:#fafafa}
+.coach-msg{display:flex;margin-bottom:12px}
+.coach-msg.user{justify-content:flex-end}
+.coach-bubble{max-width:82%;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+.coach-msg.ai .coach-bubble{background:#fff;border:1px solid var(--line)}
+.coach-msg.user .coach-bubble{background:var(--sb);color:#fff}
+.coach-who{font-size:10px;color:var(--ink3);margin-bottom:3px}
+.coach-input{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:#fff;align-items:flex-end}
+.coach-input textarea{min-height:52px;max-height:140px;resize:vertical}
+.coach-input-actions{display:flex;gap:6px;flex-direction:column}
+.coach-score{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:10px}
+.coach-score strong{font-size:24px;color:var(--sb)}
+.coach-note{font-size:11px;color:var(--ink3);padding:0 16px 12px;background:#fff}
+@media(max-width:760px){
+  .coach-setup select{width:100%}
+  .coach-status{width:100%;margin-left:0}
+  .coach-chat{height:55vh}
+  .coach-bubble{max-width:92%}
+  .coach-input{flex-direction:column}
+  .coach-input-actions{width:100%;flex-direction:row}
+  .coach-input-actions button{flex:1}
+}
+
 </style>
 </head>
 <body>
@@ -196,6 +230,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;
   <span class="badge" style="background:#cc0000">docomo</span>
   <h1>docomo版 乗り換え提案 練習サイト</h1>
   <span class="note" style="white-space:nowrap">docomo着地版 2026年8月施策反映</span>
+  <button class="act coach-launch" style="font-size:12px;padding:6px 12px" onclick="openCoach()">🤖 AI壁打ち</button>
   <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openEditor()">✏️ 解答編集</button>
   <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openReport()">📋 回答まとめ</button>
   <button class="ghost" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="openKnowledge()">💡 知識チェック</button>
@@ -213,7 +248,7 @@ var memCache = {};      // ストレージ不可時のフォールバック
 var saveTimer = null;
 var storageOK = (typeof window.storage === 'object' && window.storage && typeof window.storage.set === 'function');
 
-var PLAN_OPTS = ['（未選択）','変更なし・持ち込み','ドコモ MAX（無制限／U22割適用時は30GB）','ドコモ ポイ活MAX（無制限）','ドコモ ポイ活20（20GB）','ドコモ mini 6GB','ドコモ mini 12GB','ahamo（40GB）','ahamo大盛り（120GB）','スマホデビューU15（〜5GB）','スマホデビューU15（5〜20GB）','キッズケータイ','その他（施策欄に記入）'];
+var PLAN_OPTS = ['（未選択）','変更なし・持ち込み','ドコモ MAX（無制限／U22割適用時は30GB）','ドコモ ポイ活MAX（無制限）','ドコモ ポイ活20（20GB）','ドコモ mini 4GB','ドコモ mini 6GB','ドコモ mini 12GB','ahamo（40GB）','ahamo大盛り（120GB）','スマホデビューU15（〜5GB）','スマホデビューU15（5〜20GB）','キッズケータイ','その他（施策欄に記入）'];
 var CALL_OPTS = ['（通話なし）','5分かけ放題','10分かけ放題','24時間かけ放題'];
 var CARD_OPTS = ['（未選択）','つけない','dカード（ノーマル）','dカードGOLD'];
 var NET_OPTS  = ['（未選択）','変更なし','ドコモ光 1ギガ（マンション）','ドコモ光 1ギガ（戸建て）','ドコモ光 10ギガ','home 5G','ドコモでんき（新規）','その他'];
@@ -228,9 +263,9 @@ var HOW_OPTS  = ['（未選択）','事業者変更（事変）','解約新規',
 // 各ケースの解答はパターンの配列。パターンは {title, reason, phones:[{who,plan,min,disc,saku}], net:{plan,fee,how,saku}, points} の構造
 // phones配列はCASES[i].phonesと同順。フォームから編集可能。
 
-var ANS_DATA = [{"patterns":[{"title":"パターンA：父ahamo＋母ドコモmini＋子ahamo＋でんきCB","reason":"父はスマホスタートプラン終了で高くなっているため安さ優先でahamo。母は少量でmini。子（22歳）はahamoでCB15,000円。でんき乗り換えCB10,000円も提案。","phones":[{"plan":"ahamo（40GB）","min":"2,970円","disc":"（みんなドコモ割カウントのみ・セット割なし）","saku":"CB15,000円（1か月後・セブン銀行）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"光セット割▲1,210円＋dカードGOLD▲550円＋でんきセット割▲110円","saku":"CB10,000円（1か月後・セブン銀行）"},{"plan":"ahamo（40GB）","min":"2,970円","disc":"（みんなドコモ割カウントのみ・セット割なし）","saku":"CB15,000円（1か月後・セブン銀行）"}],"net":{"plan":"ドコモ光 1ギガ（戸建て）","fee":"5,720円（光TV990円＋固定電話550円別途）","how":"事業者変更（BIGLOBE光→ドコモ光・NTT発番引継可）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）"},"points":"・au 2年返却プログラム22ヶ月目の父：端末はそのまま持ち込みでMNPのみ\n・子のiPhone15（36回払い残14回）：端末持ち込みでMNPのみ（残債は支払い継続）\n・母のauPAYゴールド→dカードGOLD新規提案でCB10,000pt\n・NetflixパックはauのみのためMNP後は別途Netflix契約（2,200円〜）が必要→事前説明必須\n・auでんき→ドコモでんきGreenへ変更でCB10,000pt\n・父の@ezweb.ne.jpメール：乗り換え前にIDとパスワードを控えて引き継ぐかどうかをヒアリング。引き継ぐ場合は毎月330円をau側に支払い（クレジットカードのみ対応）→カード有無も必ずヒアリング\n・固定電話（NTT発番）の番号引き継ぎ時の事務手数料：2,200円が発生\n・事業者変更（事変）の場合は光テレビの工事は不要"}]},{"patterns":[{"title":"パターンA：父ドコモMAX（U22利用者登録）＋母ドコモMAX（U22）＋子①mini＋子②U15＋子③キッズ＋でんき","reason":"父母ともU22割（子①14歳を利用者登録）で7か月実質0円。5回線でみんなドコモ割フル適用。子②Android新規はU15プラン。子③キッズケータイ新規。でんき乗り換えCB10,000pt。","phones":[{"plan":"ドコモ MAX（U22）・30GB","min":"0円（U22割7か月）→その後5,368円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円＋U22割（7か月）","saku":"CB20,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）→その後5,368円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円＋U22割（7か月）","saku":"CB20,000円（1か月後・セブン銀行）"},{"plan":"ドコモ mini 4GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"端末：Galaxy A25 一括1円（MNP/新規）"},{"plan":"キッズケータイ","min":"550円＋イマドコサーチ330円＝880円/月","disc":"","saku":"端末一括3,960円"}],"net":{"plan":"ドコモ光 10ギガ（戸建て）＋光テレビ","fee":"6,380円＋光テレビ990円＋専用ルーター550円＝7,920円","how":"解約新規（SoftBank光10G→ドコモ光10G）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）。光テレビはお客様負担・別途工事費発生（基本3,300円＋接続7,150円＋視聴サービス3,080円＝13,530円）"},"points":"・U22利用者登録：子①（14歳）を父・母の回線に各1回線登録→父母それぞれにU22割（7か月）適用\n・キッズケータイとU22は同一利用者登録可能（U15との同一登録は不可）。\n・SB光10G工事費残債→SB解約金・残債補填スキーム先に確認（dポイント最大10万pt補填）\n・Netflixパック（SB独自）はMNP後に別途Netflix契約が必要→事前説明必須\n・父のPayPayカードGOLD→dカードGOLDへの切替提案\n・東京電力→ドコモでんきGreenへ変更でCB10,000pt\n・光テレビはお客様負担・別途工事費発生：基本3,300円＋接続7,150円＋視聴サービス3,080円＝13,530円"}]},{"patterns":[{"title":"パターンA：ahamo（24時間かけ放題）＋home5G＋でんきBasic","reason":"かけ放題ニーズあり。楽天ハンド5G持ち込みでahamoへSIMのみ乗り換え。引越し直後でWi-Fiなし→home5G新規。でんきCBも積み上げ。","phones":[{"plan":"ahamo（40GB）＋24時間かけ放題（＋1,100円）","min":"4,070円","disc":"（1回線のみ・みんなドコモ割対象外）","saku":"CB15,000円（1か月後・セブン銀行）"}],"net":{"plan":"home5G（新規）","fee":"5,280円","how":"新規（工事不要）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）"},"points":"・楽天ハンド5G：SIMロック解除確認必須（持ち込みMNP）\n・home5G本体代：73,260円→24か月利用で月々割引により実質負担なし\n・東京電力→ドコモでんきBasicへ変更でCB10,000pt\n・1回線のみのためみんなドコモ割は対象外（2回線目ができたときに適用）"}]},{"patterns":[{"title":"パターンA：父ahamo＋母ドコモMAX（U22利用者登録：子②11歳）＋子①ドコモMAX（U22）＋子②U15＋でんき","reason":"父はahamo（5分通話無料付き・40GB）でシンプルに。母はU22割（11歳の子②を利用者登録）で7か月0円。子①（14歳）もU22適用。子②（11歳・在留資格）はU15プラン新規。","phones":[{"plan":"ahamo（40GB）","min":"2,420円（U15親子割▲550円）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"CB15,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt。iPhone17（買い時プログラム・カエドキ1円・頭金16,500円・特典利用料あり）"},{"plan":"ドコモ MAX（無制限）","min":"1,210円（U22割7か月）→割引終了後6,578円","disc":"U22割（7か月）＋みんなドコモ割▲1,210円＋dカードGOLD▲550円＋でんき▲110円（光セット割なし・Wi-Fi管理費込みのため）","saku":"CB20,000円（1か月後・セブン銀行）。iPhone17（買い時プログラム・カエドキ1円・頭金16,500円・特典利用料あり）"},{"plan":"ドコモ MAX（無制限）","min":"1,210円（U22割7か月）→割引終了後6,578円","disc":"U22割（7か月）＋みんなドコモ割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone16（買い時プログラム・カエドキ1円・特典利用料あり・頭金なし）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"Galaxy A25 一括1円（MNP/新規）。在留カード確認必須"}],"net":{"plan":"マンション管理費込みWi-Fi（変更なし）","fee":"0円（変更なし）","how":"変更なし","saku":"auでんき→ドコモでんきGreenへ変更でCB10,000pt（開通後）"},"points":"・父母のiPhone16e（48回払い21ヶ月目・返却プログラム）：端末返却後にiPhone17へ。または端末持ち込みでMNP\n・子②（11歳・在留資格2年半）：在留カード確認必須\n・U22利用者登録：子②（11歳）を母の回線に登録→母にU22割7か月適用\n・マンション管理費込みWi-FiのためドコモMAXに光セット割は適用不可\n・auでんき→ドコモでんきGreenでCB10,000pt"}]},{"patterns":[{"title":"パターンA：父ahamo継続（U15親子割）＋母ドコモMAX（U22：子登録）＋子スマホデビューU15新規","reason":"父はahamo継続（変更不要・dカードGOLD新規でCB）。子をU15＋U22に同時登録→母のドコモMAXにU22割7か月適用。子はスマホデビューU15でiPhone17（カエドキ1円・頭金16,500円）。母はカード増やしたくない意向だがdカードGOLDが必須条件のため丁寧な説明が必要。","phones":[{"plan":"ahamo（40GB）（継続）","min":"2,420円（U15親子割▲550円・最大12か月）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"dカードGOLD新規CB10,000pt（審査完了後）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（子をU15＋U22同時登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone17（カエドキ1円・初回11円・頭金16,500円・特典利用料あり）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"U15親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"iPhone17 256GB（カエドキ1円・初回11円・頭金16,500円・特典利用料あり）CB20,000円（1か月後・セブン銀行）"}],"net":{"plan":"ドコモ光（父名義・既契約・変更なし）","fee":"4,400円","how":"変更なし","saku":"既契約のため光CBなし（光セット割はすぐ適用）"},"points":"・子をU15利用者登録＋U22利用者登録の両方に同時登録→母の回線にU22割7か月適用（申込時に子の本人確認書類必須）\n・父のahamo：みんなドコモ割カウント対象（割引は受けられないが3回線カウントに入る）\n・母はクレジットカードを増やしたくない意向→dカードGOLD加入の必要性（U22割適用の条件・割引額・CB）を丁寧に説明\n・母のiPhone14 Pro（バッテリー78%）→iPhone17（カエドキ1円・頭金16,500円・特典利用料あり）を提案\n・Y!mobile親子割残6か月分の違約金（撤去）スキーム確認\n・母はPayPayカードノーマル所持→dカードGOLD加入の必要性を丁寧に説明（カード増やしたくない意向あり）"}]},{"patterns":[{"title":"パターンA：祖父dカードGOLD追加＋でんき変更／娘ドコモMAX（U22）＋iphone16／孫ドコモmini","reason":"祖父はirumo継続・dカードGOLD新規のみ。でんき東京電力→ドコモでんきGreenでCB。娘はU22割（孫13歳を利用者登録）で7か月0円。孫はドコモminiで880円着地。娘宅J:COM→ドコモ光解約新規。","phones":[{"plan":"irumo（変更なし）","min":"880円（変更なし）","disc":"dカードGOLD追加でカード割（▲550円）→880円のまま（irumoは光セット割なし）","saku":"dカードGOLD新規CB10,000pt（審査完了後）。でんきCB10,000pt（開通後）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（孫13歳を利用者登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone16（カエドキ1円・MNPのみ・特典利用料あり・頭金なし）。Netflixスタンダード1,590円/月＋Amazonプライム600円/月が別途発生（MNP後のNetflixパック終了のため事前説明必須）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）"}],"net":{"plan":"祖父宅：ドコモ光（変更なし）／娘宅：ドコモ光 1ギガ（戸建て）＋J:COMテレビ継続","fee":"娘宅：ドコモ光5,720円＋J:COMテレビ6,074円＋HDD880円＋固定電話550円＝13,224円","how":"娘宅：解約新規（J:COM→ドコモ光。NTT発番のため固定電話番号引継可・550円/月）","saku":"娘宅：CB20,000pt（開通後・店舗受取）。J:COM解約金補填：dポイント最大100,000pt。光の工事費：28,600円"},"points":"・孫（13歳）をU22利用者登録→娘の回線に適用（申込時に孫の本人確認書類必須）\n・別居家族グループには健保・戸籍謄本などの家族確認書類が必須\n・娘のiPhone15（買い時プログラム22ヶ月目・月1円）：返却可能時期を確認してから新端末提案\n・NetflixパックはauのためMNP後は別途契約必要→事前説明\n・J:COM解約撤去工事費が発生（補填対象か確認）\n・祖父宅東京電力→ドコモでんきGreenでCB10,000pt（月々550円増）"}]},{"patterns":[{"title":"パターンA：夫ahamo大盛り＋妻ドコモMAX（U22：子9歳登録）＋子ドコモmini＋でんき","reason":"夫は50GB利用でahamo大盛り（120GB・4,950円）が最適。妻はU22割（子9歳を利用者登録）で7か月0円。子（9歳）はドコモmini 4GBで880円。dカードGOLD・でんきCBも積み上げ。","phones":[{"plan":"ahamo大盛り（120GB）","min":"4,400円（U15親子割▲550円）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"CB15,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt。端末：iPhone17 Pro そのまま継続（月415円・返却プログラム12ヶ月目）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（子9歳を利用者登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。端末：Galaxy S26 そのまま継続（月1円・残38回）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）。端末：arrows we2 そのまま継続"}],"net":{"plan":"ドコモ光 1ギガ（戸建て）＋光テレビ＋固定電話","fee":"5,720円＋固定電話550円＋光テレビ990円＝7,260円","how":"事業者変更（SoftBank光→ドコモ光。SB発番→NTT発番に変わるため番号変更に注意）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）。固定電話手数料2,200円。SB光解約金・SBでんき解約金発生の可能性あり→事前確認"},"points":"・子（9歳）をU22利用者登録→妻の回線にU22割7か月適用（申込時に子の本人確認書類必須）\n・キッズケータイではなくドコモminiのため子のU22登録は可能（キッズケータイ×U22は禁止）\n・SB光→ドコモ光事変：SB発番のため固定電話番号は変わる可能性あり（事前説明必須）\n・光テレビはそのまま継続（別途工事費なし）\n・SBでんき解約金が発生する可能性→事前確認\n・夫のPayPayカードGOLD→dカードGOLDへ切替提案"}]}];
+var ANS_DATA = [{"patterns":[{"title":"パターンA：父ahamo＋母ドコモmini＋子ahamo＋でんきCB","reason":"父はスマホスタートプラン終了で高くなっているため安さ優先でahamo。母は少量でmini。子（22歳）はahamoでCB15,000円。でんき乗り換えCB10,000円も提案。","phones":[{"plan":"ahamo（40GB）","min":"2,970円","disc":"（みんなドコモ割カウントのみ・セット割なし）","saku":"CB15,000円（1か月後・セブン銀行）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"光セット割▲1,210円＋dカードGOLD▲550円＋でんきセット割▲110円","saku":"CB10,000円（1か月後・セブン銀行）"},{"plan":"ahamo（40GB）","min":"2,970円","disc":"（みんなドコモ割カウントのみ・セット割なし）","saku":"CB15,000円（1か月後・セブン銀行）"}],"net":{"plan":"ドコモ光 1ギガ（戸建て）","fee":"5,720円（光TV990円＋固定電話550円別途）","how":"事業者変更（BIGLOBE光→ドコモ光・NTT発番引継可）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）"},"points":"・au 2年返却プログラム22ヶ月目の父：端末はそのまま持ち込みでMNPのみ\n・子のiPhone15（36回払い残14回）：端末持ち込みでMNPのみ（残債は支払い継続）\n・母のauPAYゴールド→dカードGOLD新規提案でCB10,000pt\n・NetflixパックはauのみのためMNP後は別途Netflix契約（2,200円〜）が必要→事前説明必須\n・auでんき→ドコモでんきGreenへ変更でCB10,000pt\n・父の@ezweb.ne.jpメール：乗り換え前にIDとパスワードを控えて引き継ぐかどうかをヒアリング。引き継ぐ場合は毎月330円をau側に支払い（クレジットカードのみ対応）→カード有無も必ずヒアリング\n・固定電話（NTT発番）の番号引き継ぎ時の事務手数料：2,200円が発生\n・事業者変更（事変）の場合は光テレビの工事は不要"}]},{"patterns":[{"title":"パターンA：父ドコモMAX（U22利用者登録）＋母ドコモMAX（U22）＋子①mini＋子②U15＋子③キッズ＋でんき","reason":"父母ともU22割（子①14歳を利用者登録）で7か月実質0円。5回線でみんなドコモ割フル適用。子②Android新規はU15プラン。子③キッズケータイ新規。でんき乗り換えCB10,000pt。","phones":[{"plan":"ドコモ MAX（U22）・30GB","min":"0円（U22割7か月）→その後5,368円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円＋U22割（7か月）","saku":"CB20,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）→その後5,368円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円＋U22割（7か月）","saku":"CB20,000円（1か月後・セブン銀行）"},{"plan":"ドコモ mini 4GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"端末：Galaxy A25 一括1円（MNP/新規）"},{"plan":"キッズケータイ","min":"550円＋イマドコサーチ330円＝880円/月","disc":"","saku":"端末一括3,960円"}],"net":{"plan":"ドコモ光 10ギガ（戸建て）＋光テレビ","fee":"6,380円＋光テレビ990円＋専用ルーター550円＝7,920円","how":"解約新規（SoftBank光10G→ドコモ光10G）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）。光テレビはお客様負担・別途工事費発生（基本3,300円＋接続7,150円＋視聴サービス3,080円＝13,530円）"},"points":"・U22利用者登録：子①（14歳）を父・母の回線に各1回線登録→父母それぞれにU22割（7か月）適用\n・キッズケータイとU22は同一利用者登録可能（U15との同一登録は不可）。\n・SB光10G工事費残債→SB解約金・残債補填スキーム先に確認（dポイント最大10万pt補填）\n・Netflixパック（SB独自）はMNP後に別途Netflix契約が必要→事前説明必須\n・父のPayPayカードGOLD→dカードGOLDへの切替提案\n・東京電力→ドコモでんきGreenへ変更でCB10,000pt\n・光テレビはお客様負担・別途工事費発生：基本3,300円＋接続7,150円＋視聴サービス3,080円＝13,530円"}]},{"patterns":[{"title":"提案例：ahamo（24時間かけ放題）＋home 5G＋でんきBasic ※ドコモ光でも可","reason":"かけ放題ニーズあり。楽天ハンド5G持ち込みでahamoへSIMのみ乗り換え。固定回線は利用開始時期をヒアリングし、今日から使いたいならhome 5G、約3週間待てるならドコモ光も提案可。","phones":[{"plan":"ahamo（40GB）＋24時間かけ放題（＋1,100円）","min":"4,070円","disc":"（1回線のみ・みんなドコモ割対象外）","saku":"CB15,000円（1か月後・セブン銀行）"}],"net":{"plan":"home 5G（提案例）／ドコモ光も可","fee":"home 5G：5,280円／ドコモ光：選択プランに応じる","how":"home 5G：新規（工事不要）／ドコモ光：新規（工事あり・開通目安約3週間）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）"},"points":"・固定回線は利用開始時期を必ずヒアリング\n・今日から使いたい場合はhome 5Gが有力\n・約3週間待てる場合はドコモ光でも正解\n・ドコモ光は開通までポケットWi-Fiが提供される場合あり\n・楽天ハンド5G：SIMロック解除確認必須（持ち込みMNP）\n・東京電力→ドコモでんきBasicへ変更でCB10,000pt\n・1回線のみのためみんなドコモ割は対象外"}]},{"patterns":[{"title":"パターンA：父ahamo＋母ドコモMAX（U22利用者登録：子②11歳）＋子①ドコモMAX（U22）＋子②U15＋でんき","reason":"父はahamo（5分通話無料付き・40GB）でシンプルに。母はU22割（11歳の子②を利用者登録）で7か月0円。子①（14歳）もU22適用。子②（11歳・在留資格）はU15プラン新規。","phones":[{"plan":"ahamo（40GB）","min":"2,420円（U15親子割▲550円）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"CB15,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt。iPhone17（買い時プログラム・カエドキ1円・頭金16,500円・特典利用料あり）"},{"plan":"ドコモ MAX（無制限）","min":"1,210円（U22割7か月）→割引終了後6,578円","disc":"U22割（7か月）＋みんなドコモ割▲1,210円＋dカードGOLD▲550円＋でんき▲110円（光セット割なし・Wi-Fi管理費込みのため）","saku":"CB20,000円（1か月後・セブン銀行）。iPhone17（買い時プログラム・カエドキ1円・頭金16,500円・特典利用料あり）"},{"plan":"ドコモ MAX（無制限）","min":"1,210円（U22割7か月）→割引終了後6,578円","disc":"U22割（7か月）＋みんなドコモ割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone16（買い時プログラム・カエドキ1円・特典利用料あり・頭金なし）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"Galaxy A25 一括1円（MNP/新規）。在留カード確認必須"}],"net":{"plan":"マンション管理費込みWi-Fi（変更なし）","fee":"0円（変更なし）","how":"変更なし","saku":"auでんき→ドコモでんきGreenへ変更でCB10,000pt（開通後）"},"points":"・父母のiPhone16e（48回払い21ヶ月目・返却プログラム）：端末返却後にiPhone17へ。または端末持ち込みでMNP\n・子②（11歳・在留資格2年半）：在留カード確認必須\n・U22利用者登録：子②（11歳）を母の回線に登録→母にU22割7か月適用\n・マンション管理費込みWi-FiのためドコモMAXに光セット割は適用不可\n・auでんき→ドコモでんきGreenでCB10,000pt"}]},{"patterns":[{"title":"パターンA：父ahamo継続（U15親子割）＋母ドコモMAX（U22：子登録）＋子スマホデビューU15新規","reason":"父はahamo継続。子は14歳のためU15対象で、U15＋U22の利用者登録を使った提案を組み立てる。母はU22割、子はスマホデビューU15新規。","phones":[{"plan":"ahamo（40GB）（継続）","min":"2,420円（U15親子割▲550円・最大12か月）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"dカードGOLD新規CB10,000pt（審査完了後）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（子をU15＋U22同時登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone17（カエドキ1円・初回11円・頭金16,500円・特典利用料あり）"},{"plan":"スマホデビューU15（5〜20GB）","min":"858円（1年目）","disc":"U15親子割▲1,870円（最大12か月）＋dカードGOLD▲550円","saku":"iPhone17 256GB（カエドキ1円・初回11円・頭金16,500円・特典利用料あり）CB20,000円（1か月後・セブン銀行）"}],"net":{"plan":"ドコモ光（父名義・既契約・変更なし）","fee":"4,400円","how":"変更なし","saku":"既契約のため光CBなし（光セット割はすぐ適用）"},"points":"・子は14歳。年齢確認をしてU15対象であることを判断\n・子をU15利用者登録＋U22利用者登録の両方に同時登録→母の回線にU22割7か月適用（申込時に子の本人確認書類必須）\n・父のahamo：みんなドコモ割カウント対象\n・母はクレジットカードを増やしたくない意向→dカードGOLD加入の必要性を丁寧に説明\n・Y!mobile親子割の残期間も比較して提案"}]},{"patterns":[{"title":"パターンA：祖父dカードGOLD追加＋でんき変更／娘ドコモMAX（U22）＋iphone16／孫ドコモmini","reason":"祖父はirumo継続。娘はU22割。孫は20GB契約だが実利用は4GBのため、契約容量ではなく実利用量を根拠にドコモ mini 4GBを提案。","phones":[{"plan":"irumo（変更なし）","min":"880円（変更なし）","disc":"dカードGOLD追加でカード割（▲550円）→880円のまま（irumoは光セット割なし）","saku":"dカードGOLD新規CB10,000pt（審査完了後）。でんきCB10,000pt（開通後）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（孫13歳を利用者登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。iPhone16（カエドキ1円・MNPのみ・特典利用料あり・頭金なし）。Netflixスタンダード1,590円/月＋Amazonプライム600円/月が別途発生（MNP後のNetflixパック終了のため事前説明必須）"},{"plan":"ドコモ mini 4GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）"}],"net":{"plan":"祖父宅：ドコモ光（変更なし）／娘宅：ドコモ光 1ギガ（戸建て）＋J:COMテレビ継続","fee":"娘宅：ドコモ光5,720円＋J:COMテレビ6,074円＋HDD880円＋固定電話550円＝13,224円","how":"娘宅：解約新規（J:COM→ドコモ光。NTT発番のため固定電話番号引継可・550円/月）","saku":"娘宅：CB20,000pt（開通後・店舗受取）。J:COM解約金補填：dポイント最大100,000pt。光の工事費：28,600円"},"points":"・孫は20GB契約中だが実利用4GB。実利用量を根拠にドコモ mini 4GBを提案\n・孫（13歳）をU22利用者登録→娘の回線に適用（申込時に孫の本人確認書類必須）\n・別居家族グループには家族確認書類が必須\n・娘のiPhone15の返却可能時期を確認\n・J:COM解約撤去工事費が発生（補填対象か確認）\n・祖父宅東京電力→ドコモでんきGreenでCB10,000pt"}]},{"patterns":[{"title":"パターンA：夫ahamo大盛り＋妻ドコモMAX（U22：子9歳登録）＋子ドコモmini＋でんき","reason":"夫は50GB利用でahamo大盛り（120GB・4,950円）が最適。妻はU22割（子9歳を利用者登録）で7か月0円。子（9歳）はドコモmini 4GBで880円。dカードGOLD・でんきCBも積み上げ。","phones":[{"plan":"ahamo大盛り（120GB）","min":"4,400円（U15親子割▲550円）","disc":"U15親子割（家族）▲550円（最大12か月）","saku":"CB15,000円（1か月後・セブン銀行）＋dカードGOLD新規CB10,000pt。端末：iPhone17 Pro そのまま継続（月415円・返却プログラム12ヶ月目）"},{"plan":"ドコモ MAX（無制限）","min":"0円（U22割7か月）","disc":"U22割（子9歳を利用者登録・7か月）＋みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円","saku":"CB20,000円（1か月後・セブン銀行）。端末：Galaxy S26 そのまま継続（月1円・残38回）"},{"plan":"ドコモ mini 6GB","min":"880円","disc":"みんなドコモ割▲1,210円＋光セット割▲1,210円＋dカードGOLD▲550円＋でんき▲110円","saku":"CB10,000円（1か月後・セブン銀行）。端末：arrows we2 そのまま継続"}],"net":{"plan":"ドコモ光 1ギガ（戸建て）＋光テレビ＋固定電話","fee":"5,720円＋固定電話550円＋光テレビ990円＝7,260円","how":"事業者変更（SoftBank光→ドコモ光。SB発番→NTT発番に変わるため番号変更に注意）","saku":"CB20,000pt（開通後・店舗受取）＋でんきCB10,000pt（開通後）。固定電話手数料2,200円。SB光解約金・SBでんき解約金発生の可能性あり→事前確認"},"points":"・子（9歳）をU22利用者登録→妻の回線にU22割7か月適用（申込時に子の本人確認書類必須）\n・キッズケータイではなくドコモminiのため子のU22登録は可能（キッズケータイ×U22は禁止）\n・SB光→ドコモ光事変：SB発番のため固定電話番号は変わる可能性あり（事前説明必須）\n・光テレビはそのまま継続（別途工事費なし）\n・SBでんき解約金が発生する可能性→事前確認\n・夫のPayPayカードGOLD→dカードGOLDへ切替提案"}]}];
 
-var CASES = [{"name":"1. au家族3人","sub":"au3人→docomo集約","title":"ケース1｜au家族3人","phones":[{"who":"父（60代）","tag":"t-au","label":"au","plan":"スマホスタートプラン","usage":"25GB","fee":"4,136円","device":"Galaxy A55（2年返却プログラム利用中・22ヶ月目）","dfee":"0円（返却前提）"},{"who":"母（50代）","tag":"t-au","label":"au","plan":"スマホミニプラン（3GBまで）","usage":"3GB","fee":"2,398円","device":"Xperia 10Ⅵ（3年前一括購入）","dfee":"0円"},{"who":"子（22歳）","tag":"t-au","label":"au","plan":"使い放題MAX","usage":"40GB","fee":"5,228円","device":"iPhone15 128GB（36回払い・22ヶ月目）","dfee":"2,200円/月（残14回）"}],"net":{"name":"BIGLOBE光","type":"戸建て","speed":"最大1Gbps","fee":"5,478円","tel":"あり（NTT発番・550円/月）","tv":"あり（990円/月）","cost":"工事費残債なし","debt":"なし","note":"名義：母。合計7,018円/月"},"special":"父はガラケーからスマホ変更時にauへ。以前はdocomo利用。現在2年返却プログラム利用中（22ヶ月目）。auメール（@ezweb.ne.jp）を利用中。乗り換え前にIDとパスワードを控えて引き継ぐかどうかをヒアリングすること。引き継ぐ場合は毎月330円をau側に支払う。クレジットカードのみ対応可能なのでそこもヒアリング必須。母はずっとau・他社乗り換え経験なし・auPAYゴールドカード利用中・auキャリアメール（@au.com/@ezweb.ne.jp）利用中→乗り換え前にIDとパスワードを控えて引き継ぐかどうかヒアリング必須（引き継ぐ場合は月330円・クレジットカードのみ対応）・家族全員の支払いを母が行っている。子は36回分割・端末代は母が支払い。固定回線はBIGLOBE光（NTT発番・光テレビあり）。auでんき利用中→でんきCB10,000ptも提案。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"2. SB家族5人","sub":"SB5人→docomo集約","title":"ケース2｜SoftBank家族5人","phones":[{"who":"父（40代）","tag":"t-sb","label":"SoftBank","plan":"ペイトク無制限","usage":"30GB","fee":"7,128円","device":"Pixel 9 128GB（一括済）","dfee":"0円"},{"who":"母（40代）","tag":"t-sb","label":"SoftBank","plan":"テイガク無制限","usage":"20GB","fee":"5,148円","device":"iPhone16（返却プログラム・月3,600円）","dfee":"3,600円/月（残債あり）"},{"who":"子①（14歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン","usage":"3〜4GB","fee":"2,596円","device":"iPhone SE3（母のお下がり・4年以上使用）","dfee":"0円"},{"who":"子②（未持ち）","tag":"t-new","label":"未持ち","plan":"なし","usage":"なし","fee":"なし","device":"Android希望","dfee":"なし"},{"who":"子③（未持ち）","tag":"t-new","label":"未持ち","plan":"なし","usage":"なし","fee":"なし","device":"キッズケータイ希望","dfee":"なし"}],"net":{"name":"SoftBank光（10ギガ・戸建て・父名義）","type":"戸建て","speed":"最大10Gbps","fee":"9,950円（基本6,380円＋HGW550円＋BBユニット550円＋光テレビ990円＋Netflixスタンダード1,480円）","tel":"なし","tv":"あり（SoftBank光テレビ・990円/月）","cost":"工事費残債 23,760円","debt":"残債あり（23,760円）","note":"父名義。NetflixパックはSoftBankでのみ提供のため乗り換え後は別途契約に。父PayPay月8万円・PayPayカードGOLD利用中"},"special":"父はSoftBank2年前から。PayPay月8万円利用のためペイトクプランに加入。子①はiPhone SE3（バッテリー78%・お下がり）。子②はAndroid新規希望、子③はキッズケータイ希望。SB光工事費残債あり→SB光解約金・残債補填スキーム確認必須。でんき東京電力利用中→でんきCB提案。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"3. 楽天単身","sub":"楽天→ahamo+home5G","title":"ケース3｜楽天単身","phones":[{"who":"単身男性（30代）","tag":"t-rakuten","label":"楽天mobile","plan":"最強プラン（無制限）","usage":"130GB","fee":"3,278円","device":"楽天ハンド5G（一括購入済み）","dfee":"0円"}],"net":{"name":"なし（引越し直後・Wi-Fiなし）","type":"マンション","speed":"なし","fee":"0円","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"引越し前の光回線は解約済み。名義：本人"},"special":"以前auを利用。通話無料・安さで楽天へ変更。現在電波が悪い・通話が途切れることにストレスを感じている。引越し直後でWi-Fi環境なし。光を検討中。NTT回線ありとのこと。24時間かけ放題ニーズあり。東京電力利用中→でんきCB提案。SIMロック解除確認必須（楽天端末）。","area":[[true,"docomo 5G"],[true,"LTE"],[true,"home5G判定"]],"decisionLog":""},{"name":"4. UQ家族4人（U15×2）","sub":"UQ4人→docomo集約","title":"ケース4｜UQモバイル家族4人","phones":[{"who":"父（40代）在留外国人(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン（通話パック60・親子割）","usage":"20GB/30GB","fee":"1,738円（通話パック60）","device":"iPhone 16e 128GB（48回払い・21ヶ月目・返却プログラム）","dfee":"月々2円（残27回）"},{"who":"母（40代）在留外国人(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン（親子割加入中）","usage":"10GB/30GB","fee":"1,078円（親子割加入）","device":"iPhone 16e 128GB（48回払い・21ヶ月目・返却プログラム）","dfee":"月々2円（残27回）"},{"who":"子①（14歳）(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン","usage":"4GB/30GB","fee":"1,078円（親子割10ヶ月目）","device":"iPhone SE3（母のお下がり・バッテリー78%）","dfee":"0円"},{"who":"子②（11歳・在留資格2年半保有）","tag":"t-new","label":"未契約","plan":"なし","usage":"なし","fee":"なし","device":"端末ニーズあり","dfee":"なし"}],"net":{"name":"マンション管理費込みWi-Fi","type":"マンション","speed":"なし","fee":"0円（管理費込み）","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"Wi-Fi変更なし。auでんき利用中→でんきCB提案"},"special":"父はauとUQを行き来。10ヶ月前にauからUQへ乗り換え。父母ともiPhone 16e（48回払い21ヶ月目・返却プログラム）。子①はiPhone SE3お下がり。子②は11歳で在留資格2年半保有（在留カード確認必須）。マンションWi-Fi管理費込みで変更不要。auでんき利用中→ドコモでんきGreenへ変更提案。","area":[[true,"docomo 5G"],[true,"LTE"]],"decisionLog":""},{"name":"5. 3人家族・母だけ変えたい","sub":"ahamo+YM→docomo集約","title":"ケース5｜ahamo＋SoftBank家族","phones":[{"who":"父（50代）","tag":"t-ahamo","label":"ahamo","plan":"ahamo（30GB）","usage":"18GB","fee":"2,970円（現在0円・一括購入済み）","device":"Galaxy S24 128GB（バッテリー84%）","dfee":"0円（一括購入済み）"},{"who":"母（40代）","tag":"t-ym","label":"Y!mobile","plan":"シンプル2 M（30GB）","usage":"19GB","fee":"2,948円（基本4,378円・親子割6/12か月目）","device":"iPhone14 Pro 128GB（バッテリー78%）","dfee":"0円"},{"who":"子（未持ち）","tag":"t-new","label":"未持ち","plan":"なし（初めてのスマホ）","usage":"なし","fee":"なし","device":"iPhone希望","dfee":"なし"}],"net":{"name":"ドコモ光（父名義・既契約）","type":"マンション","speed":"最大1Gbps","fee":"4,400円","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"光テレビなし・固定電話なし。継続利用"},"special":"父はahamo（dカード不所持）継続。母はY!mobileシンプル2 M・親子割6か月目（残6か月）・クレジットカードを増やしたくない意向・PayPayカードノーマル所持・端末を新しくしたい希望。子は未持ちでiPhone希望・新規。ドコモ光は父名義で既契約（セット割すぐ適用可）。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"6. docomo＋au＋SB 3世代家族","sub":"3世代→docomo集約","title":"ケース6｜docomo＋au＋SB 3世代家族","phones":[{"who":"祖父（70代）","tag":"t-docomo","label":"docomo","plan":"irumo（9GBまで段階式）","usage":"3GB","fee":"880円","device":"らくらくフォン 64GB（バッテリー90%・3年前一括購入）","dfee":"0円"},{"who":"娘（40代）","tag":"t-au","label":"au","plan":"使い放題MAX 5G（Netflixパック込み）","usage":"20GB","fee":"7,106円","device":"iPhone15（買い時プログラム48回払い・22ヶ月目）","dfee":"月々1円（残26回）"},{"who":"孫（13歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン","usage":"20GB","fee":"3,916円","device":"iPhone XR（母のお下がり・バッテリー75%）","dfee":"0円"}],"net":{"name":"ドコモ光（1ギガ戸建て・祖父名義）","type":"戸建て","speed":"最大1Gbps","fee":"5,720円＋固定電話550円＝6,270円","tel":"あり（550円/月）","tv":"なし","cost":"なし","debt":"なし","note":"祖父宅。祖父名義"},"special":"祖父はirumo（880円）利用中・dカードノーマル。娘はau使い放題MAX＋Netflixパック（Netflix1,590円/月＋Amazonプライム600円/月→乗り換え後の別途契約要確認）・auPAYカードゴールド利用中・買い時プログラム22ヶ月目。孫（13歳）はSoftBankスマホデビュープラン・iPhone XRお下がり（バッテリー75%）。娘宅はJ:COM→ドコモ光へ解約新規（NTT発番のため番号引継可・撤去工事費発生）。別居家族グループ構成には家族確認書類必須。祖父宅東京電力→でんきCB提案。","area":[[true,"docomo 5G"],[true,"LTE"]],"net2":{"name":"J:COM（ケーブルテレビ・娘名義）","type":"戸建て","speed":"最大300Mbps","fee":"テレビ・ネット9,680円＋固定電話1,903円＋HDD880円＝12,463円","tel":"あり（J:COM・1,903円/月）","tv":"なし（ケーブルTV）","cost":"J:COM解約費用発生（撤去工事費別途）","debt":"なし","note":"娘宅。娘名義。auでんき・太陽光発電設備あり。別居のため家族確認書類（健保・戸籍謄本等）が必要"}},{"name":"7. SB夫婦+U15子","sub":"SB夫婦→docomo","title":"ケース7｜SB夫婦＋U15子（9歳）","phones":[{"who":"夫（40代）","tag":"t-sb","label":"SoftBank","plan":"ペイトク2（無制限）","usage":"50GB","fee":"7,678円","device":"iPhone17 Pro 256GB（バッテリー95%）","dfee":"415円/月（10ヶ月目）"},{"who":"妻（40代）","tag":"t-sb","label":"SoftBank","plan":"テイガク無制限","usage":"25GB","fee":"5,148円","device":"Galaxy S26（48回払い・10ヶ月目）","dfee":"1円/月（残38回）"},{"who":"子（9歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン＋","usage":"2GB/4GB","fee":"1,978円","device":"arrows we2（一括1円・10ヶ月）","dfee":"0円"}],"net":{"name":"SoftBank光（1ギガ戸建て・夫名義）","type":"戸建て","speed":"最大1Gbps","fee":"5,720円＋BBユニット650円＋固定電話550円＋光テレビ990円＝7,910円","tel":"あり（SoftBank光でんわ・SB発番）","tv":"あり（SoftBank光テレビ・990円/月）","cost":"解約金発生（要確認）","debt":"なし","note":"夫名義。SoftBankでんき利用中（2025年6月開始・Y!mobile時代から）。解約金発生の可能性あり"},"special":"夫は1年前にauからSBへ乗り換え。PayPay月3万円・PayPayカードGOLD利用中。iPhone17 Pro返却プログラム12ヶ月目（端末月415円）。妻はGalaxy S26（48回払い10ヶ月目）。子9歳はarrows we2（一括1円）。SB光→ドコモ光事変（NTT発番のため固定電話番号引継可・光テレビ継続・別途光テレビ工事費なし）。SBでんき→でんき解約金発生の可能性あり。dカードGOLD提案でCB10,000pt。乗り換えに抵抗なし・お得だと感じればやる意向。","area":[[true,"docomo 5G"],[true,"LTE"]]}];
+var CASES = [{"name":"1. au家族3人","sub":"au3人→docomo集約","title":"ケース1｜au家族3人","phones":[{"who":"父（60代）","tag":"t-au","label":"au","plan":"スマホスタートプラン","usage":"25GB","fee":"4,136円","device":"Galaxy A55（2年返却プログラム利用中・22ヶ月目）","dfee":"0円（返却前提）"},{"who":"母（50代）","tag":"t-au","label":"au","plan":"スマホミニプラン（3GBまで）","usage":"3GB","fee":"2,398円","device":"Xperia 10Ⅵ（3年前一括購入）","dfee":"0円"},{"who":"子（22歳）","tag":"t-au","label":"au","plan":"使い放題MAX","usage":"40GB","fee":"5,228円","device":"iPhone15 128GB（36回払い・22ヶ月目）","dfee":"2,200円/月（残14回）"}],"net":{"name":"BIGLOBE光","type":"戸建て","speed":"最大1Gbps","fee":"5,478円","tel":"あり（NTT発番・550円/月）","tv":"あり（990円/月）","cost":"工事費残債なし","debt":"なし","note":"名義：母。合計7,018円/月"},"special":"父はガラケーからスマホ変更時にauへ。以前はdocomo利用。現在2年返却プログラム利用中（22ヶ月目）。auメール（@ezweb.ne.jp）を利用中。乗り換え前にIDとパスワードを控えて引き継ぐかどうかをヒアリングすること。引き継ぐ場合は毎月330円をau側に支払う。クレジットカードのみ対応可能なのでそこもヒアリング必須。母はずっとau・他社乗り換え経験なし・auPAYゴールドカード利用中・auキャリアメール（@au.com/@ezweb.ne.jp）利用中→乗り換え前にIDとパスワードを控えて引き継ぐかどうかヒアリング必須（引き継ぐ場合は月330円・クレジットカードのみ対応）・家族全員の支払いを母が行っている。子は36回分割・端末代は母が支払い。固定回線はBIGLOBE光（NTT発番・光テレビあり）。auでんき利用中→でんきCB10,000ptも提案。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"2. SB家族5人","sub":"SB5人→docomo集約","title":"ケース2｜SoftBank家族5人","phones":[{"who":"父（40代）","tag":"t-sb","label":"SoftBank","plan":"ペイトク無制限","usage":"30GB","fee":"7,128円","device":"Pixel 9 128GB（一括済）","dfee":"0円"},{"who":"母（40代）","tag":"t-sb","label":"SoftBank","plan":"テイガク無制限","usage":"20GB","fee":"5,148円","device":"iPhone16（返却プログラム・月3,600円）","dfee":"3,600円/月（残債あり）"},{"who":"子①（14歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン","usage":"3〜4GB","fee":"2,596円","device":"iPhone SE3（母のお下がり・4年以上使用）","dfee":"0円"},{"who":"子②（未持ち）","tag":"t-new","label":"未持ち","plan":"なし","usage":"なし","fee":"なし","device":"Android希望","dfee":"なし"},{"who":"子③（未持ち）","tag":"t-new","label":"未持ち","plan":"なし","usage":"なし","fee":"なし","device":"キッズケータイ希望","dfee":"なし"}],"net":{"name":"SoftBank光（10ギガ・戸建て・父名義）","type":"戸建て","speed":"最大10Gbps","fee":"9,950円（基本6,380円＋HGW550円＋BBユニット550円＋光テレビ990円＋Netflixスタンダード1,480円）","tel":"なし","tv":"あり（SoftBank光テレビ・990円/月）","cost":"工事費残債 23,760円","debt":"残債あり（23,760円）","note":"父名義。NetflixパックはSoftBankでのみ提供のため乗り換え後は別途契約に。父PayPay月8万円・PayPayカードGOLD利用中"},"special":"父はSoftBank2年前から。PayPay月8万円利用のためペイトクプランに加入。子①はiPhone SE3（バッテリー78%・お下がり）。子②はAndroid新規希望、子③はキッズケータイ希望。SB光工事費残債あり→SB光解約金・残債補填スキーム確認必須。でんき東京電力利用中→でんきCB提案。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"3. 楽天単身","sub":"楽天→ahamo＋固定回線","title":"ケース3｜楽天単身","phones":[{"who":"単身男性（30代）","tag":"t-rakuten","label":"楽天mobile","plan":"最強プラン（無制限）","usage":"130GB","fee":"3,278円","device":"楽天ハンド5G（一括購入済み）","dfee":"0円"}],"net":{"name":"なし（引越し直後・Wi-Fiなし）","type":"マンション","speed":"なし","fee":"0円","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"引越し前の光回線は解約済み。名義：本人"},"special":"以前auを利用。通話無料・安さで楽天へ変更。現在電波が悪い・通話が途切れることにストレスを感じている。引越し直後でWi-Fi環境なし。固定回線を検討中。NTT回線ありとのこと。利用開始時期は要ヒアリング（今日から使いたい場合はhome 5G、約3週間待てる場合はドコモ光も提案可。ドコモ光は開通までポケットWi-Fiが提供される場合あり）。24時間かけ放題ニーズあり。東京電力利用中→でんきCB提案。SIMロック解除確認必須（楽天端末）。","area":[[true,"docomo 5G"],[true,"LTE"],[true,"home5G判定"]],"decisionLog":""},{"name":"4. UQ家族4人（U15×2）","sub":"UQ4人→docomo集約","title":"ケース4｜UQモバイル家族4人","phones":[{"who":"父（40代）在留外国人(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン（通話パック60・親子割）","usage":"20GB/30GB","fee":"1,738円（通話パック60）","device":"iPhone 16e 128GB（48回払い・21ヶ月目・返却プログラム）","dfee":"月々2円（残27回）"},{"who":"母（40代）在留外国人(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン（親子割加入中）","usage":"10GB/30GB","fee":"1,078円（親子割加入）","device":"iPhone 16e 128GB（48回払い・21ヶ月目・返却プログラム）","dfee":"月々2円（残27回）"},{"who":"子①（14歳）(在留期限2年半保有)","tag":"t-uq","label":"UQ","plan":"トクトクプラン","usage":"4GB/30GB","fee":"1,078円（親子割10ヶ月目）","device":"iPhone SE3（母のお下がり・バッテリー78%）","dfee":"0円"},{"who":"子②（11歳・在留資格2年半保有）","tag":"t-new","label":"未契約","plan":"なし","usage":"なし","fee":"なし","device":"端末ニーズあり","dfee":"なし"}],"net":{"name":"マンション管理費込みWi-Fi","type":"マンション","speed":"なし","fee":"0円（管理費込み）","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"Wi-Fi変更なし。auでんき利用中→でんきCB提案"},"special":"父はauとUQを行き来。10ヶ月前にauからUQへ乗り換え。父母ともiPhone 16e（48回払い21ヶ月目・返却プログラム）。子①はiPhone SE3お下がり。子②は11歳で在留資格2年半保有（在留カード確認必須）。マンションWi-Fi管理費込みで変更不要。auでんき利用中→ドコモでんきGreenへ変更提案。","area":[[true,"docomo 5G"],[true,"LTE"]],"decisionLog":""},{"name":"5. 3人家族・母だけ変えたい","sub":"ahamo+YM→docomo集約","title":"ケース5｜ahamo＋SoftBank家族","phones":[{"who":"父（50代）","tag":"t-ahamo","label":"ahamo","plan":"ahamo（30GB）","usage":"18GB","fee":"2,970円（現在0円・一括購入済み）","device":"Galaxy S24 128GB（バッテリー84%）","dfee":"0円（一括購入済み）"},{"who":"母（40代）","tag":"t-ym","label":"Y!mobile","plan":"シンプル2 M（30GB）","usage":"19GB","fee":"2,948円（基本4,378円・親子割6/12か月目）","device":"iPhone14 Pro 128GB（バッテリー78%）","dfee":"0円"},{"who":"子（14歳・未持ち）","tag":"t-new","label":"未持ち","plan":"なし（初めてのスマホ）","usage":"なし","fee":"なし","device":"iPhone希望","dfee":"なし"}],"net":{"name":"ドコモ光（父名義・既契約）","type":"マンション","speed":"最大1Gbps","fee":"4,400円","tel":"なし","tv":"なし","cost":"なし","debt":"なし","note":"光テレビなし・固定電話なし。継続利用"},"special":"父はahamo（dカード不所持）継続。母はY!mobileシンプル2 M・親子割6か月目（残6か月）・クレジットカードを増やしたくない意向・PayPayカードノーマル所持・端末を新しくしたい希望。子は14歳・未持ちでiPhone希望・新規。ドコモ光は父名義で既契約（セット割すぐ適用可）。","area":[[true,"docomo 5G"],[true,"LTE"]]},{"name":"6. docomo＋au＋SB 3世代家族","sub":"3世代→docomo集約","title":"ケース6｜docomo＋au＋SB 3世代家族","phones":[{"who":"祖父（70代）","tag":"t-docomo","label":"docomo","plan":"irumo（9GBまで段階式）","usage":"3GB","fee":"880円","device":"らくらくフォン 64GB（バッテリー90%・3年前一括購入）","dfee":"0円"},{"who":"娘（40代）","tag":"t-au","label":"au","plan":"使い放題MAX 5G（Netflixパック込み）","usage":"20GB","fee":"7,106円","device":"iPhone15（買い時プログラム48回払い・22ヶ月目）","dfee":"月々1円（残26回）"},{"who":"孫（13歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン","usage":"4GB/20GB","fee":"3,916円","device":"iPhone XR（母のお下がり・バッテリー75%）","dfee":"0円"}],"net":{"name":"ドコモ光（1ギガ戸建て・祖父名義）","type":"戸建て","speed":"最大1Gbps","fee":"5,720円＋固定電話550円＝6,270円","tel":"あり（550円/月）","tv":"なし","cost":"なし","debt":"なし","note":"祖父宅。祖父名義"},"special":"祖父はirumo（880円）利用中・dカードノーマル。娘はau使い放題MAX＋Netflixパック（Netflix1,590円/月＋Amazonプライム600円/月→乗り換え後の別途契約要確認）・auPAYカードゴールド利用中・買い時プログラム22ヶ月目。孫（13歳）はSoftBankスマホデビュープラン（20GB中4GB利用）・iPhone XRお下がり（バッテリー75%）。娘宅はJ:COM→ドコモ光へ解約新規（NTT発番のため番号引継可・撤去工事費発生）。別居家族グループ構成には家族確認書類必須。祖父宅東京電力→でんきCB提案。","area":[[true,"docomo 5G"],[true,"LTE"]],"net2":{"name":"J:COM（ケーブルテレビ・娘名義）","type":"戸建て","speed":"最大300Mbps","fee":"テレビ・ネット9,680円＋固定電話1,903円＋HDD880円＝12,463円","tel":"あり（J:COM・1,903円/月）","tv":"なし（ケーブルTV）","cost":"J:COM解約費用発生（撤去工事費別途）","debt":"なし","note":"娘宅。娘名義。auでんき・太陽光発電設備あり。別居のため家族確認書類（健保・戸籍謄本等）が必要"}},{"name":"7. SB夫婦+U15子","sub":"SB夫婦→docomo","title":"ケース7｜SB夫婦＋U15子（9歳）","phones":[{"who":"夫（40代）","tag":"t-sb","label":"SoftBank","plan":"ペイトク2（無制限）","usage":"50GB","fee":"7,678円","device":"iPhone17 Pro 256GB（バッテリー95%）","dfee":"415円/月（10ヶ月目）"},{"who":"妻（40代）","tag":"t-sb","label":"SoftBank","plan":"テイガク無制限","usage":"25GB","fee":"5,148円","device":"Galaxy S26（48回払い・10ヶ月目）","dfee":"1円/月（残38回）"},{"who":"子（9歳）","tag":"t-sb","label":"SoftBank","plan":"スマホデビュープラン＋","usage":"2GB/4GB","fee":"1,978円","device":"arrows we2（一括1円・10ヶ月）","dfee":"0円"}],"net":{"name":"SoftBank光（1ギガ戸建て・夫名義）","type":"戸建て","speed":"最大1Gbps","fee":"5,720円＋BBユニット650円＋固定電話550円＋光テレビ990円＝7,910円","tel":"あり（SoftBank光でんわ・SB発番）","tv":"あり（SoftBank光テレビ・990円/月）","cost":"解約金発生（要確認）","debt":"なし","note":"夫名義。SoftBankでんき利用中（2025年6月開始・Y!mobile時代から）。解約金発生の可能性あり"},"special":"夫は1年前にauからSBへ乗り換え。PayPay月3万円・PayPayカードGOLD利用中。iPhone17 Pro返却プログラム12ヶ月目（端末月415円）。妻はGalaxy S26（48回払い10ヶ月目）。子9歳はarrows we2（一括1円）。SB光→ドコモ光事変（NTT発番のため固定電話番号引継可・光テレビ継続・別途光テレビ工事費なし）。SBでんき→でんき解約金発生の可能性あり。dカードGOLD提案でCB10,000pt。乗り換えに抵抗なし・お得だと感じればやる意向。","area":[[true,"docomo 5G"],[true,"LTE"]]}];
 
 var QUIZ_PER_CASE = [
   [
@@ -1408,6 +1443,234 @@ function preloadAll(){
 }
 preloadAll();
 
+
+/* ============ AI壁打ち講師 ============ */
+var COACH_API_URL = '';
+var coachCase = 0;
+var coachHistory = [];
+var coachStage = 0;
+var coachBusy = false;
+
+var COACH_STAGE_LABELS = ['ヒアリング','状況整理','提案','根拠確認','採点'];
+
+function getCoachCaseContext(i){
+  var c=getCaseData(i);
+  var a=getAnsPatterns(i);
+  return {
+    caseIndex:i+1,
+    title:c.title,
+    phones:c.phones,
+    net:c.net,
+    net2:c.net2||null,
+    special:c.special,
+    area:c.area,
+    answerPatterns:a
+  };
+}
+
+function openCoach(){
+  coachCase = cur >= 0 ? cur : 0;
+  document.getElementById('coachCaseSelect').value=String(coachCase);
+  document.getElementById('coachModal').classList.add('open');
+  startCoach();
+}
+
+function closeCoach(){
+  document.getElementById('coachModal').classList.remove('open');
+}
+
+function setCoachStage(n){
+  coachStage=Math.max(0,Math.min(4,n));
+  document.querySelectorAll('#coachProgress .coach-step').forEach(function(el,i){
+    el.classList.toggle('on',i===coachStage);
+  });
+}
+
+function coachAdd(role,text){
+  var wrap=document.getElementById('coachChat');
+  var row=document.createElement('div');
+  row.className='coach-msg '+(role==='user'?'user':'ai');
+  var bubble=document.createElement('div');
+  bubble.className='coach-bubble';
+  if(role!=='user'){
+    var who=document.createElement('div');
+    who.className='coach-who';
+    who.textContent='AI講師';
+    bubble.appendChild(who);
+  }
+  var body=document.createElement('div');
+  body.textContent=text;
+  bubble.appendChild(body);
+  row.appendChild(bubble);
+  wrap.appendChild(row);
+  wrap.scrollTop=wrap.scrollHeight;
+}
+
+function startCoach(){
+  coachHistory=[];
+  coachStage=0;
+  setCoachStage(0);
+  document.getElementById('coachChat').innerHTML='';
+  document.getElementById('coachInput').value='';
+  var c=getCaseData(coachCase);
+  coachAdd('ai','ケース'+(coachCase+1)+'を始めます。\n「'+c.title+'」\n\nまず、このお客様に対して何を確認しますか？');
+  document.getElementById('coachStatus').textContent=COACH_API_URL?'AI接続':'ローカル講師モード';
+}
+
+function changeCoachCase(){
+  coachCase=parseInt(document.getElementById('coachCaseSelect').value,10);
+  startCoach();
+}
+
+function randomCoachCase(){
+  coachCase=Math.floor(Math.random()*CASES.length);
+  document.getElementById('coachCaseSelect').value=String(coachCase);
+  startCoach();
+}
+
+function coachHint(){
+  var hints=[
+    '提案を決める前に、現在の利用量・困りごと・家族構成・固定回線の状況から、今回の判断に必要な項目を1つ選んで聞いてみましょう。',
+    '「今の契約容量」ではなく「実際に使っている量」や「いつから使いたいか」が判断材料になるケースがあります。',
+    '料金だけでなく、適用条件・端末残債・固定回線の変更方法・本人確認書類まで考えてみてください。'
+  ];
+  coachAdd('ai','ヒント：'+hints[Math.min(coachStage,hints.length-1)]);
+}
+
+function localCoachReply(text){
+  var t=(text||'').toLowerCase();
+  var c=coachCase;
+  if(/答え|正解|模範/.test(text)){
+    setCoachStage(4);
+    var pat=getAnsPatterns(c)[0];
+    return '模範解答に進みます。\n\n'+pat.title+'\n提案理由：'+pat.reason+'\n\n判断ポイント：\n'+pat.points+'\n\n最後に、自分の回答との違いを1つ言語化してみてください。';
+  }
+  if(c===2){
+    if(coachStage===0){
+      if(/いつ|時期|今日|すぐ|wifi|wi-fi|固定|光|home/.test(t)){
+        setCoachStage(1);
+        return 'いい視点です。固定回線は「いつから使いたいか」が重要です。では、お客様が「今日から使いたい」と答えた場合、何を提案しますか？理由も教えてください。';
+      }
+      return 'その確認も必要です。今回、引越し直後でWi-Fiがない点に注目すると、固定回線についてもう1つ確認したいことがあります。何でしょう？';
+    }
+    if(coachStage===1){
+      if(/home\s*5g|ホーム.?5g/.test(t)){
+        setCoachStage(2);
+        return 'home 5Gですね。なぜドコモ光ではなくhome 5Gを選びましたか？';
+      }
+      return '利用開始時期とのつながりを考えてみましょう。「今日から使う」が条件なら、工事を待たずに使える選択肢は何ですか？';
+    }
+    if(coachStage===2){
+      setCoachStage(3);
+      return '根拠が整理できています。では逆に、お客様が約3週間待てる場合は何を提案できますか？開通までの補助手段もあれば答えてください。';
+    }
+    if(coachStage===3){
+      setCoachStage(4);
+      return 'その考え方でOKです。ケース3はhome 5Gだけが正解ではありません。今日からならhome 5G、約3週間待てるならドコモ光も提案可能で、開通までポケットWi-Fiが提供される場合があります。\n\n次はスマホ側の提案根拠まで説明してみましょう。';
+    }
+  }
+  if(c===4){
+    if(coachStage===0){
+      if(/年齢|何歳|歳/.test(text)){
+        setCoachStage(1);
+        return 'お子さんは14歳です。14歳という条件から、使える子ども向け施策・プランをどう考えますか？';
+      }
+      return 'このケースではお子さんの条件がプラン選択に直結します。まず何を確認しますか？';
+    }
+    if(coachStage<=2){
+      setCoachStage(coachStage+1);
+      return '14歳なのでU15対象です。プラン名だけでなく、U15とU22の利用者登録をどう使うか、誰の回線にどの割引を付けるかまで説明してください。';
+    }
+  }
+  if(c===5){
+    if(coachStage===0){
+      if(/利用|何gb|ギガ|gb/.test(t)){
+        setCoachStage(1);
+        return '孫は20GB契約ですが、実際の利用量は4GBです。契約容量と実利用量のどちらを基準に提案しますか？';
+      }
+      return '孫のプランを決める前に、現在の「契約容量」だけでなく何を確認するとよいでしょう？';
+    }
+    if(coachStage<=2){
+      if(/mini|4gb|4 gb/.test(t)){
+        setCoachStage(3);
+        return 'その方向です。なぜ20GBプランではなくdocomo mini 4GBでよいのか、お客様に説明するつもりで根拠を答えてください。';
+      }
+      return '孫は「20GB契約・4GB利用」です。実利用量を基準にすると、どのプランが適切でしょう？';
+    }
+    if(coachStage===3){
+      setCoachStage(4);
+      return 'OKです。ケース6では、契約容量20GBではなく実利用4GBを見てdocomo mini 4GBへ落とす判断が重要です。固定回線や別居家族の書類条件まで抜けていないか確認しましょう。';
+    }
+  }
+  if(coachStage===0){
+    setCoachStage(1);
+    return 'いいですね。その確認結果を踏まえたとき、次に確認すべきことを1つ挙げてください。料金プランを決めるのに必要な情報を優先しましょう。';
+  }
+  if(coachStage===1){
+    setCoachStage(2);
+    return 'では、ここまでの情報を整理して、スマホ・固定回線・付帯施策を含めた提案を一度組み立ててください。';
+  }
+  if(coachStage===2){
+    setCoachStage(3);
+    return '提案ありがとうございます。なぜそのプラン・GB数にしたのか、現在の利用量や適用条件を根拠に説明してください。';
+  }
+  if(coachStage===3){
+    setCoachStage(4);
+    return '最後に自己点検です。①ヒアリング漏れ ②料金/GB ③固定回線 ④割引条件 ⑤危険な誤案内、の5点で自分の提案を見直してみてください。「答え教えて」で模範解答も確認できます。';
+  }
+  return '続けて、判断根拠をもう一段具体的にしてください。';
+}
+
+async function sendCoach(){
+  if(coachBusy) return;
+  var input=document.getElementById('coachInput');
+  var text=(input.value||'').trim();
+  if(!text) return;
+  input.value='';
+  coachAdd('user',text);
+  coachHistory.push({role:'user',content:text});
+  coachBusy=true;
+  document.getElementById('coachSend').disabled=true;
+  document.getElementById('coachStatus').textContent=COACH_API_URL?'AIが考えています…':'講師が確認中…';
+  try{
+    var reply='';
+    if(COACH_API_URL){
+      var resp=await fetch(COACH_API_URL,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          caseContext:getCoachCaseContext(coachCase),
+          history:coachHistory.slice(-16),
+          stage:coachStage
+        })
+      });
+      if(!resp.ok) throw new Error('API '+resp.status);
+      var data=await resp.json();
+      reply=data.reply||'';
+      if(typeof data.stage==='number') setCoachStage(data.stage);
+    }
+    if(!reply) reply=localCoachReply(text);
+    coachHistory.push({role:'assistant',content:reply});
+    coachAdd('ai',reply);
+  }catch(e){
+    var fallback=localCoachReply(text);
+    coachHistory.push({role:'assistant',content:fallback});
+    coachAdd('ai',fallback+'\n\n※AI接続に失敗したため、ローカル講師モードで続行しています。');
+  }finally{
+    coachBusy=false;
+    document.getElementById('coachSend').disabled=false;
+    document.getElementById('coachStatus').textContent=COACH_API_URL?'AI接続':'ローカル講師モード';
+    input.focus();
+  }
+}
+
+function coachKeydown(e){
+  if(e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendCoach();
+  }
+}
+
 var KNOWLEDGE_DATA = {"sections": [{"icon": "📖", "title": "プラン知識", "items": [{"heading": "ドコモ MAX", "points": ["光セット割：▲1,210円（他社は1,100円が多い）", "DAZNが無料", "でんきセット割：▲110円", "U22：7か月間、30GBまで0円で利用可能（ボーナスパケット）", "U29：3か月間、同様の特典あり", "U15：対象者がいる場合、▲550円", "dカード GOLDで支払うと10％還元", "2回線：▲550円"]}, {"heading": "ahamo", "points": ["割引なしでも40GBで月額2,970円", "dカード GOLDで支払うと＋5GB", "かけ放題：1,100円（24時間かけ放題）", "海外：14日間利用可能", "ahamoは基本的に割引がない分、シンプルな料金体系", "ahamoデータ増量は1GBあたり550円"]}, {"heading": "家族間通話", "points": ["MAX → ahamo：家族間通話OK（無料）", "ahamo → MAX：有料", "ahamoのファミリー回線から発信すると有料"]}, {"heading": "ドコモメール", "points": ["MAX／ドコモの通常プラン → ahamoへ変更する場合、ドコモメールを引き継ぐには「ドコモメール持ち運び」が必要"]}, {"heading": "利用者登録の併用ルール", "points": ["U15 ＋ U22：同一利用者OK（2回線で同じ子を登録可能）", "キッズケータイ ＋ U22：同一利用者OK", "キッズケータイ ＋ U15：不可"]}]}, {"icon": "🛜", "title": "光の知識", "items": [{"heading": "ドコモ光", "points": ["ドコモ光 → 他社の光コラボ：「事業者変更」になる", "1ギガ → 10ギガ：解約新規扱い", "ホームルーター → 1ギガ／10ギガ：基本的に「解約新規」扱い", "ルーターレンタル：1ギガは無料、10ギガは550円"]}, {"heading": "固定電話", "points": ["番号ポータビリティで電話番号を引き継げる場合あり", "引き継ぎ可能：NTT発番、フレッツ光・光コラボのひかり電話の番号、他社固定電話", "引き継ぎ不可：NTT以外が独自発番した番号・050から始まる番号"]}, {"heading": "テレビ", "points": ["光テレビは事業者変更なら工事が入らないケースあり", "他社の光テレビの工事費は負担できる", "ドコモ側での光テレビの工事費はかかる（補填不可）", "解約→新規の場合は工事が必要", "ドコモ側でテレビ工事が発生する場合は、テレビの台数によって費用が変わる"]}, {"heading": "のりかえ特典", "points": ["Air → home 5Gの場合、20,000ptなどの特典あり", "10万ポイントはドコモ光にすると対象になる場合あり（キャンペーンは都度確認）"]}]}, {"icon": "💳", "title": "dカード GOLD", "items": [{"heading": "dカード GOLD", "points": ["年会費：11,000円", "申込完了後の請求タイミングは要確認", "ドコモ料金の支払いなどでポイント還元あり", "料金・キャンペーン・端末施策は変更されるので、実際の案内ではその時点の最新条件を確認"]}]}, {"icon": "🐶", "title": "他社系", "items": [{"heading": "⚠ 共通", "points": ["1年以内の解約は最大1,100円の違約金が発生する"]}, {"heading": "SoftBank／Y!mobile", "points": ["SoftBankはメールアドレスが複数種類ある → どのメールを使っているか確認", "メールアドレス持ち運びは有料：1メールアドレスにつき月額330円／年額3,300円", "LYPプレミアム：SoftBank／Y!mobileでは無料だが、ドコモへ変更すると有料になる場合あり", "@i.softbank.jp：SoftBankのiPhone向けメール", "Y!mobile → SoftBank：のりかえ特典あり", "Y!mobileは端末返却手数料22,000円のケースあり"]}, {"heading": "au／UQ", "points": ["ネットワークパックは支払い方法を設定しないと使えなくなる場合あり", "UQ → ドコモへの変更時は工事ありのケースあり", "J:COMは案内テストのケースとして通すことが多い", "UQメアド引き継ぎはできない（そもそも利用に月額220円かかる）"]}]}, {"icon": "📱", "title": "端末知識", "items": [{"heading": "iPhone", "points": ["iPhone 16：128GB／256GB　サイズ：6.1インチ", "iPhone 16は2年間実質33円などの端末施策あり（2年後の返却条件あり）", "iPhone 17：128GBなし、256GBスタート　サイズ：6.3インチ", "iPhone 17はPro以上ではない", "iPhone 14 → 15でカメラ性能が大きく向上", "カエドキプログラム：特典利用料ありの端末は返却しない場合に追加費用が発生→必ず説明"]}]}]};
 
 function openKnowledge(){
@@ -1435,6 +1698,47 @@ function openKnowledge(){
 }
 
 </script>
+
+<div class="modal-overlay" id="coachModal">
+  <div class="modal-box coach-modal">
+    <div class="modal-head">
+      <h2>🤖 AI壁打ち講師</h2>
+      <button class="ghost" onclick="closeCoach()">✕ 閉じる</button>
+    </div>
+    <div class="coach-setup">
+      <label for="coachCaseSelect">ケース</label>
+      <select id="coachCaseSelect" onchange="changeCoachCase()">
+        <option value="0">ケース1｜au家族3人</option>
+        <option value="1">ケース2｜SoftBank家族5人</option>
+        <option value="2">ケース3｜楽天単身</option>
+        <option value="3">ケース4｜UQ家族4人</option>
+        <option value="4">ケース5｜ahamo＋SoftBank家族</option>
+        <option value="5">ケース6｜docomo＋au＋SB 3世代家族</option>
+        <option value="6">ケース7｜SB夫婦＋U15子</option>
+      </select>
+      <button class="ghost" onclick="randomCoachCase()">🎲 ランダム</button>
+      <button class="ghost" onclick="startCoach()">↻ やり直す</button>
+      <span class="coach-status" id="coachStatus">ローカル講師モード</span>
+    </div>
+    <div class="coach-progress" id="coachProgress">
+      <span class="coach-step on">1 ヒアリング</span>
+      <span class="coach-step">2 状況整理</span>
+      <span class="coach-step">3 提案</span>
+      <span class="coach-step">4 根拠確認</span>
+      <span class="coach-step">5 採点</span>
+    </div>
+    <div class="coach-chat" id="coachChat"></div>
+    <div class="coach-input">
+      <textarea id="coachInput" placeholder="講師に回答してください。Enterで送信 / Shift+Enterで改行" onkeydown="coachKeydown(event)"></textarea>
+      <div class="coach-input-actions">
+        <button class="ghost" onclick="coachHint()">ヒント</button>
+        <button class="act" id="coachSend" onclick="sendCoach()">送信</button>
+      </div>
+    </div>
+    <div class="coach-note">最初から答えは出しません。回答の根拠・ヒアリング漏れ・誤案内リスクを講師役が1問ずつ深掘りします。</div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="reportModal">
   <div class="modal-box" style="max-width:920px">
     <div class="modal-head">
