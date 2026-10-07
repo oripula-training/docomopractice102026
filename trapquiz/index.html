@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>毎朝の5問｜罠クイズ</title>
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #F4F5FA;
+  --surface: #FFFFFF;
+  --ink: #1A2140;
+  --muted: #5A6180;
+  --line: #D9DDEB;
+  --accent: #2B57E8;
+  --accent-ink: #FFFFFF;
+  --ok: #0E8A63;
+  --ng: #C42F49;
+  --okbg: #E3F5EE;
+  --ngbg: #FBE7EB;
+  --facet-empty: #E3E7F3;
+  --r0: #8A90A6;
+  --r1: #2B57E8;
+  --r2: #C42F49;
+  --r3: #0E8A63;
+  --r4: #2A93B8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1326;
+    --surface: #171E3A;
+    --ink: #EDEFF8;
+    --muted: #A3AACB;
+    --line: #2B3459;
+    --accent: #7C9DFF;
+    --accent-ink: #0E1326;
+    --ok: #4FD3A6;
+    --ng: #FF7D92;
+    --okbg: #12332A;
+    --ngbg: #3A1A25;
+    --facet-empty: #232C50;
+    --r0: #8E94AD;
+    --r1: #7C9DFF;
+    --r2: #FF7D92;
+    --r3: #4FD3A6;
+    --r4: #6CCBEA;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1326;
+  --surface: #171E3A;
+  --ink: #EDEFF8;
+  --muted: #A3AACB;
+  --line: #2B3459;
+  --accent: #7C9DFF;
+  --accent-ink: #0E1326;
+  --ok: #4FD3A6;
+  --ng: #FF7D92;
+  --okbg: #12332A;
+  --ngbg: #3A1A25;
+  --facet-empty: #232C50;
+  --r0: #8E94AD;
+  --r1: #7C9DFF;
+  --r2: #FF7D92;
+  --r3: #4FD3A6;
+  --r4: #6CCBEA;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", "Meiryo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-text-size-adjust: 100%;
+}
+#app { max-width: 520px; margin: 0 auto; padding: 20px 18px 56px; }
+h1, h2, h3, p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.link { background: none; border: 0; padding: 6px 0; color: var(--muted); font-size: 14px; }
+.step { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.hero { display: grid; justify-items: center; gap: 10px; padding: 8px 0 18px; text-align: center; }
+.hero h1 { font-size: 26px; line-height: 1.35; letter-spacing: 0.02em; }
+.hero p { color: var(--muted); font-size: 15px; max-width: 24em; }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); margin: 6px 0 16px; }
+.seg button { border: 0; background: transparent; padding: 11px 8px; font-size: 15px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+.cta { width: 100%; border: 0; border-radius: 14px; background: var(--accent); color: var(--accent-ink); padding: 16px; font-size: 18px; font-weight: 700; }
+.cta:active { transform: translateY(1px); }
+.menu { display: grid; gap: 10px; margin-top: 12px; }
+.menu button { text-align: left; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); padding: 12px 14px; }
+.menu strong { display: block; font-size: 16px; }
+.menu span { color: var(--muted); font-size: 14px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 22px 0 6px; }
+.stat { border-top: 3px solid var(--line); padding-top: 8px; }
+.stat.done { border-top-color: var(--ok); }
+.stat b { display: block; font-size: 22px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat small { color: var(--muted); font-size: 12.5px; line-height: 1.5; display: block; }
+
+.section { margin-top: 26px; }
+.section h2 { font-size: 16px; margin-bottom: 4px; }
+.section p { color: var(--muted); font-size: 14px; }
+.ladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
+.rung { text-align: center; border-bottom: 4px solid var(--c); padding-bottom: 6px; }
+.rung b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.rung small { font-size: 11.5px; color: var(--muted); }
+.fresh { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+
+.card { background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px; padding: 20px 18px; }
+.tag { color: var(--muted); font-size: 13.5px; margin-bottom: 10px; }
+.q { font-size: 20px; line-height: 1.7; font-weight: 600; }
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+.ans { border: 2px solid var(--line); border-radius: 14px; background: var(--surface); padding: 18px 8px; font-size: 18px; font-weight: 700; }
+.ans b { display: block; font-size: 34px; line-height: 1.2; }
+.ans:active { transform: translateY(1px); }
+
+.timer { height: 8px; border-radius: 4px; background: var(--facet-empty); overflow: hidden; margin: 14px 0 6px; }
+.timer i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; animation: drain 5s linear forwards; }
+.timer.stopped i { animation: none; width: 0; }
+@keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.hint { color: var(--muted); font-size: 14px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.btn { border: 2px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px 10px; font-weight: 700; font-size: 16px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.wide { width: 100%; margin-top: 14px; }
+
+.fb { margin-top: 16px; border-radius: 14px; padding: 14px 16px; }
+.fb.ok { background: var(--okbg); border: 1.5px solid var(--ok); }
+.fb.ng { background: var(--ngbg); border: 1.5px solid var(--ng); }
+.fb h3 { font-size: 18px; margin-bottom: 2px; }
+.fb.ok h3 { color: var(--ok); }
+.fb.ng h3 { color: var(--ng); }
+.fb p { font-size: 15px; }
+.fb .rank { margin-top: 8px; color: var(--muted); font-size: 14px; }
+.answer-box { border: 1.5px dashed var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 16px; }
+
+.sum { display: grid; gap: 4px; margin: 6px 0 14px; text-align: center; }
+.sum b { font-size: 34px; font-variant-numeric: tabular-nums; }
+.wrong-list { display: grid; gap: 10px; margin-top: 12px; }
+.wrong-item { border-left: 4px solid var(--ng); padding: 4px 0 4px 12px; font-size: 14.5px; }
+.wrong-item small { color: var(--muted); display: block; }
+.copybox { margin-top: 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); padding: 12px 14px; font-size: 14.5px; }
+.cases { display: grid; gap: 10px; margin-top: 12px; }
+.cases button { text-align: left; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); padding: 12px 14px; display: flex; justify-content: space-between; gap: 10px; }
+.cases em { font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; }
+.foot { margin-top: 30px; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
+.foot button { margin-top: 10px; }
+.empty { text-align: center; color: var(--muted); padding: 28px 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .timer i { animation: none; transform: scaleX(0.5); }
+  .ans:active, .cta:active { transform: none; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+  'use strict';
+
+  var LABEL = { sbym: 'ソフトバンク・ワイモバイル', docomo: 'ドコモ' };
+  var RANKS = ['原石', 'サファイア', 'ルビー', 'エメラルド', 'ダイヤ'];
+  var INTERVALS = [1, 1, 3, 7, 14];
+  var KEY = 'oripula_trap_quiz_v1';
+
+  var CASES = {
+    sbym: { 1: 'ドコモ家族3人', 2: 'au＋auひかり', 3: '混同家族（3社バラバラ）', 4: '楽天単身→SoftBank Air', 5: '夫婦2人・ドコモ光ペアからの移行', 6: '単身＋別居の高齢両親', 7: 'J:COM光・テレビからの乗り換え' },
+    docomo: { 0: '全ケース共通', 1: 'au家族3人', 2: 'SoftBank家族5人', 3: '楽天単身', 4: 'UQモバイル家族4人', 5: 'ahamo＋SoftBank家族', 6: 'docomo＋au＋SB 3世代家族', 7: 'SB夫婦＋U15子（9歳）' }
+  };
+
+  var GATE = {
+    sbym: [
+      { q: 'auひかりからSoftBank光への乗り換え種別と、違約金・撤去費用への施策は？', a: '事業者変更ではなく「解約新規」。違約金・工事費残債・撤去費用は、あんしん乗り換えサポートで満額（最大10万円まで）還元。' },
+      { q: 'PayPayカード ゴールドの年会費と、還元ルールは？', a: '年会費11,000円（税込）。SoftBank通信料・SoftBank光は最大10%、Y!mobileは最大3%等の規定値。' },
+      { q: 'auメールを残す場合の、費用と期限は？', a: '月額330円（税込）。au解約後31日以内に、Webから申し込み。' },
+      { q: 'SoftBank端末返却プログラムの、基本の仕組みは？', a: '48回分割。規定月数（1年または2年）で返却すると、残りの支払いが免除。返却しなければ、残りの分割金の支払いが続く。' }
+    ],
+    docomo: [
+      { q: 'SoftBank光からドコモ光への切り替え手続きの名称と、宅内工事の有無は？', a: '事業者変更（事変）。宅内の派遣工事は、原則不要（無派遣）。' },
+      { q: 'dカード GOLDの年会費と、ポイント還元のルールは？', a: '年会費11,000円（税込）。ドコモ・ドコモ光の利用料金1,000円（税抜）につき、税抜金額の10%をポイント還元。ahamoの基本料は対象外。' },
+      { q: 'SoftBankのメール（@i.softbank.com）を残す場合の、費用と条件は？', a: '月額330円（年額一括3,300円等）。解約後31日以内に、Webから申し込み。' },
+      { q: '端末返却プログラムを18か月利用中に、機種変更する場合の、残債のルールは？', a: '前倒し返却はできるが、24回目までの分割金の支払いは免除されず、続く。' }
+    ]
+  };
+
+  var ITEMS = {
+    sbym: [
+      { c: 1, a: false, q: '古い端末でも、海外で買った端末でも、全社のSIMロックさえ解除すれば、そのままワイモバイルで使える。', e: 'ワイモバイルに対応した機種かどうかは、毎回調べる必要がある（ケース1のAQUOS sense4は対応。5Gは非対応）。' },
+      { c: 1, a: false, q: '返却プログラム（カエドキ等）の端末は、13か月目に返却すれば、残債が消える。', e: '返却は1年目からできるが、2年分の支払いは必須。' },
+      { c: 1, a: true, q: 'NURO光に固定電話がついている場合、ソフトバンク・ワイモバイルで、おうち割光セットを組める。', e: '固定電話込みのNURO光は、おうち割光セットの対象になる固定通信サービス。' },
+      { c: 1, a: false, q: '光が既存の場合、乗り換えるたびに、おうち割光セットのキャッシュバックをもらえるのが、ソフトバンクの強みである。', e: '基本は、初めて割引を組むときだけ。過去1年以内に組んでいなければ、適用になる場合があるが、ジニーでの確認が必須。' },
+      { c: 1, a: false, q: '光が既存の場合、おうち割光セットのキャッシュバックは、家電量販店のポイントか、後日のPayPayポイントかを、選べる。', e: '光が既存の場合は、PayPayポイントのみ（2週間以内の付与が多い）。' },
+      { c: 1, a: false, q: 'ワイモバイルは、すべてのプランが、キャッシュバックの対象プランである。', e: '対象はM以上。Sを着地に使う場合は、Mで入り、翌日以降に、Myワイモバイルからプランを変更する。' },
+      { c: 1, a: false, q: '2年返却制度は、乗り換えると、端末の分割金が高くなるか、一括請求になるので、乗り換えは基本的にリスクである。', e: '端末代と通信費を別々の会社にしても、端末代は上がらない。' },
+      { c: 1, a: false, q: 'ワイモバイルのデータ増量オプションは、お客様が不要と言えば、付けずに特典を使える。', e: '増量オプションは、施策の適用に必須。半年以内にMyワイモバイルから解約すれば、料金は発生しない。' },
+      { c: 2, a: false, q: 'auのNetflixパックに含まれていたNetflixとAmazonプライムは、他社へ乗り換えても、自動的に使い続けられる。', e: 'auの特典は、解約とともに終了。支払い方法の再登録が必要。' },
+      { c: 2, a: false, q: 'あんしん乗り換えキャンペーンの補填は、ソフトバンクが、元の会社へ直接支払ってくれる。', e: 'お客様が先に支払い→証明書をアップロード→審査後に、普通為替で受け取る方式（ケース2・7）。' },
+      { c: 2, a: true, q: 'あんしん乗り換えキャンペーンの、解約金・撤去費などの補填は、最大10万円まで。', e: '違約金と工事費残債の合計が10万円以内なら、全額カバー（モバイルWi-Fiルーターの残債は、42,000円が上限）。' },
+      { c: 2, a: true, q: 'SB光でおうち割を組むには、オプションパック（550円）への加入が必須である。', e: '案内する月額は、必ず「基本料金＋550円」で組み立てる（ケース2・4・5・6共通）。' },
+      { c: 2, a: false, q: 'ペイトク2の特典（PayPayゴールドカードの利用による還元）は、支払いを父のカード1枚にまとめれば、家族全員分がつく。', e: '還元は、カード名義が同一人の場合のみ。支払いをまとめると、母・子には特典がつかない。カードの発行人数分が必要（ゴールドは月4万円の利用で還元）。' },
+      { c: 2, a: false, q: 'ソフトバンクは、auやドコモと違って、特典利用料がない。', e: 'ソフトバンクには、特典利用料22,000円がある。ワイモバイルには、特典利用料がない。' },
+      { c: 3, a: false, q: 'IIJmioは、来店した当日に、MNP予約番号を発行してもらえる。', e: 'IIJmioは、即日のMNP予約番号の発行ができない。当日乗り換えできるのは、2台まで（ケース3）。' },
+      { c: 3, a: false, q: 'ワイモバイルの家族割は、全員に適用される。', e: '主回線には適用されない。2回線目以降に適用（▲1,100円）。' },
+      { c: 3, a: true, q: '中古で買ったスマホは、SIMロックと、赤ロム（ネットワーク利用制限）の、両方を確認する必要がある。', e: '中古品は、SIMロックの残りと赤ロムのリスクがある。持ち込みの場合は、必ず確認してから案内する。' },
+      { c: 4, a: false, q: 'エリア判定の「後日判定」とは、申込書類の審査が、後日になるという意味である。', e: '当日、作業員が行ってみるまで、光の配線が部屋まで来ているか分からない、という意味。即日で確定するには、SoftBank Airが唯一の選択肢。' },
+      { c: 4, a: true, q: 'SoftBank Airは、工事不要で、引越し直後でも、即日で使える。', e: '工事不要・即日開通が、Airの最大のメリット。' },
+      { c: 4, a: true, q: 'ワイモバイルのSIM単体MNPで、キャッシュバックを受け取るには、データ増量オプションへの加入が必要である。', e: 'CBの受け取りに必須（ケース4・5）。半年間は無料で、半年以内にMyワイモバイルから解約する提案を、セットで行う。' },
+      { c: 5, a: false, q: '返却プログラム（カエドキ等）の端末は、8か月目でも、返却すれば、残債が消える。', e: '返却しても、残債は消えない。24か月目まで支払いが発生する。端末を動かすメリットがないので、SIMのみが正解。' },
+      { c: 5, a: true, q: 'ドコモ光からSoftBank光への変更は、事業者変更（事変）なら、工事不要で切り替えられる。', e: '事変なら、光ファイバーの工事は不要（複数回の事変でも、工事不要）。' },
+      { c: 5, a: true, q: 'ドコモ光などのレンタルルーターは、解約後に、返却期限内に返さないと、違約金がかかる。', e: '乗り換えのときは、必ず「レンタル機器の返却期限」を、セットで案内する。' },
+      { c: 5, a: true, q: '2026年3月5日以前にドコモで契約した端末には、特典利用料が発生しない。', e: '特典利用料の開始日：ドコモは2026年3月5日、auは2026年2月26日、ソフトバンクは2026年8月25日。契約日の確認が必須。' },
+      { c: 6, a: false, q: 'ドコモのhome 5Gに端末の残債が残っている場合、ソフトバンクは、最大10万円まで補填できる。', e: '光回線の違約金は、最大10万円まで補填できるが、ホームルーターやポケットWi-Fiの残債は、42,000円まで。' },
+      { c: 6, a: true, q: 'SoftBank光1ギガを使っているお客様に、10ギガへの変更を、案内できる（KD30適用）。', e: 'ただし、自社内の変更なので、解約金などの補填はできない。' },
+      { c: 6, a: true, q: 'ワイモバイルで、60歳以上が「スーパーだれとでも定額＋（24時間）」を使うと、▲1,100円割引で880円になる。', e: '10分かけ放題（880円）と同額で、24時間かけ放題が使えるので、60歳以上は、スーパーだれとでも定額＋が一択。' },
+      { c: 6, a: true, q: '2021年9月以前にキャリアで買った端末は、SIMロックがかかっている可能性があり、他社のSIMを使う前に、解除が必要である。', e: '2021年10月以降のキャリア販売端末は、ロック禁止。それ以前の端末は、購入元キャリアのマイページで、解除を確認する。' },
+      { c: 7, a: false, q: 'J:COM発番の固定電話番号は、SoftBank光に乗り換えても、そのまま引き継げる。', e: 'J:COM発番の番号は、引き継ぎが困難。固定電話の発番元を、ヒアリングするのが必須（ケース7はNTT発番なので、継続できる）。' },
+      { c: 7, a: true, q: 'テレビを残したまま、固定電話と光だけを、ソフトバンクに変えられる。', e: 'J:COMのテレビは、そのまま残せる（継続の場合は、月額6,074円）。' },
+      { c: 7, a: true, q: 'J:COMのネットを解約すると、撤去の工事が入る。', e: '宅内の機器と、屋外ケーブルの撤去工事費は、10,780円。補填の範囲内。' },
+      { c: 7, a: false, q: '返却できる端末かどうかは、お客様が覚えているかどうかでしか、確かめられない。', e: 'Myauの端末情報に「スマホトクするプログラムで返却可能」とあれば、返却できる。4年分割が組まれている場合は、2年返却プログラムの場合が多い。' }
+    ],
+    docomo: [
+      { c: 0, a: true, q: 'U22割は、ドコモMAXだけが対象で、最大7か月、22歳以下の利用者登録が必要である。', e: 'ドコモMAXのみ・最大7か月。利用者登録には、子の本人確認書類が必須。' },
+      { c: 0, a: true, q: 'スマホデビューU15は、5〜15歳が対象で、親子割と合わせると、1年目858円から使える。', e: '2段階制。親子割と、dカードお支払割の適用で、最安858円。' },
+      { c: 0, a: false, q: 'キッズケータイは、U22の利用者登録ができる。', e: 'キッズケータイは、U15登録は可、U22登録は禁止。通信費550円、端末は一括3,960円。' },
+      { c: 0, a: false, q: 'ahamoは、ドコモ光セット割の対象プランである。', e: '対象外。ただし、みんなドコモ割の回線数には、カウントされる（ケース5と共通）。' },
+      { c: 0, a: false, q: 'ポイ活MAXは、みんなドコモ割（3回線以上の割引）の対象プランである。', e: '対象外。ただし、光セット割・dカードGOLD・でんきセット割は、適用できる（ケース7と共通）。' },
+      { c: 0, a: true, q: 'ドコモ光のアップセルは、セット割の条件として入っていれば、案内は不要である。', e: 'ドコモ光アップセルは不要（セット割の条件として入っていれば、十分）。' },
+      { c: 0, a: false, q: 'みんなドコモ割は、2回線以上で、各回線に▲1,210円（税込）が適用される。', e: '3回線以上が条件。2回線の場合は、▲550円。1回線は対象外。' },
+      { c: 0, a: false, q: 'スマホデビューU15は、5〜12歳が対象である。', e: '対象は、5〜15歳。' },
+      { c: 0, a: false, q: 'U22割は、ahamoにも適用できる。', e: 'U22割は、ドコモMAXのみが対象（最大7か月）。' },
+      { c: 0, a: false, q: 'dカードGOLDの年会費は、5,500円（税込）である。', e: '年会費は、11,000円（税込）。年会費に見合うかを、お客様の利用状況に合わせて説明する。' },
+      { c: 0, a: false, q: 'キッズケータイの通信費は、月額1,100円（税込）である。', e: '通信費は、550円（税込）。端末は一括3,960円。' },
+      { c: 0, a: false, q: 'ahamoは、みんなドコモ割の回線数に、カウントされない。', e: 'ahamoは、割引は受けられないが、みんなドコモ割の回線数には、カウントされる。' },
+      { c: 0, a: false, q: 'ドコモでんきを新規開通したときのCBは、20,000円である。', e: 'でんきCBは、10,000円（開通後）。ほかに、でんきセット割▲110円/回線が付く。' },
+      { c: 0, a: false, q: 'キッズケータイは、スマホデビューU15の利用者登録（U15登録）ができない。', e: 'キッズケータイは、U15登録は可。U22登録だけが禁止。' },
+      { c: 1, a: true, q: 'スマホスタート割のような、期間限定の割引は、対象期間が終わると、自動的に満額請求に戻る。', e: '期間が終わると、割引前の基本料金が請求される（使い放題MAX+は7,788円）。' },
+      { c: 1, a: true, q: '固定電話番号は、発番元（NTT発番か光電話発番か）によって、事業者変更のときの引き継ぎ方法が、変わる場合がある。', e: '契約の前に、発番元を必ず確認する。' },
+      { c: 1, a: true, q: 'みんなドコモ割は、3回線以上で、各回線に▲1,210円（税込）が適用される。', e: 'ドコモ光が既存なら、光セット割も、重複して適用できる。' },
+      { c: 1, a: true, q: 'auの端末の残債があっても、MNP（他社からの乗り換え）はできる。', e: '残債があってもMNPはできるが、残債の支払い義務は続く（消えない）。' },
+      { c: 1, a: true, q: 'ドコモでんきを新規開通すると、開通後にCB10,000円と、でんきセット割（▲110円/回線）が適用される。', e: 'でんきCB10,000円は、開通後。ファミリー割引グループ内の対象プランの各回線に、▲110円。' },
+      { c: 2, a: true, q: 'SoftBankのメールアドレスを、MNPのあとも使い続けたい場合は、乗り換える前に、IDとパスワードを控えておく必要がある。', e: 'メールアドレスが複数ある場合は、どれを継続したいかも、事前に確認する。' },
+      { c: 2, a: false, q: 'キッズケータイとドコモU22割は、同じ利用者に、重複して登録できる。', e: 'キッズケータイとU22割の、同一利用者への登録は禁止。キッズケータイ＋U15は可。' },
+      { c: 2, a: true, q: 'キッズケータイの通信費は550円（税込）、端末の一括価格は3,960円（税込）である。', e: '料金体系がシンプルで、手軽に提案できる。' },
+      { c: 2, a: true, q: 'スマホデビューU15は、dカードお支払割と親子割を適用すると、1年目858円から使える。', e: '親子割（最大12か月）＋dカードお支払割▲550円で、最安858円。2年目以降は、通常料金。' },
+      { c: 2, a: false, q: 'SoftBankで使っていたLYPポイントとLYP IDは、MNPのあとも、手続きなしで自動的に引き継がれる。', e: '自動では引き継がれない。事前に、IDとパスワードを控え、移行の手続きを確認する。' },
+      { c: 3, a: true, q: 'home 5Gは、ドコモMAXに、ドコモ光セット割と同額の▲1,210円（税込）のセット割が適用される。', e: '光の工事が不要で、すぐ設置できる。' },
+      { c: 3, a: false, q: '楽天モバイルの端末は、SIMロックを解除しなくても、docomoのSIMをそのまま使える。', e: '楽天モバイルの端末は、SIMロックの解除が必要。持ち込みの前に、必ず確認する。' },
+      { c: 3, a: false, q: 'ドコモMAXを新規1回線だけ契約した場合、みんなドコモ割（3回線以上）が適用される。', e: 'みんなドコモ割は、3回線以上が条件。1回線のみは対象外（2回線は▲550円）。' },
+      { c: 3, a: true, q: 'ドコモでんきを新規開通すると、開通後に、CBとして10,000円を受け取れる。', e: 'でんきCB10,000円は、開通後に受け取り。home 5G＋MAXの新規と合わせて、CBを積み上げる。' },
+      { c: 3, a: true, q: '過去にdカードGOLDを持っていて解約した人でも、再度の新規申込として扱われれば、新規CB10,000円の対象になり得る。', e: 'ただし、再度の入会審査が必要。年会費11,000円との比較で、提案を判断する。' },
+      { c: 4, a: true, q: 'ドコモの親子割（U15）は、スマホデビューU15の契約者本人に、最大12か月間、割引が適用される。', e: '本人に、最大12か月間▲1,100円〜1,870円。dカードお支払割と合わせると、858円〜。' },
+      { c: 4, a: true, q: 'ドコモの親子割（家族）は、親が、ドコモMAX・ポイ活MAX・ahamoのいずれかを契約していることが条件である。', e: 'この3プランのいずれかを親が契約すると、親にも▲550円が、最大12か月適用される。' },
+      { c: 4, a: false, q: '在留資格のある子を、SIM単体で新規契約する場合は、在留カードなどがあれば、在留期間に関係なく契約できる。', e: 'SIM単体でも、在留期間が3か月以上必要。端末込みなら、26か月以上が必要。' },
+      { c: 4, a: true, q: 'スマホデビューU15は、5GB以下なら月額2,508円（税込）、5GB超〜20GBなら3,278円（税込）の、2段階制である。', e: '親子割の適用で、最安858円。上限設定オプションもある。' },
+      { c: 4, a: false, q: 'UQモバイルからdocomoにMNPするとき、dカードを持っていることが、必須の条件である。', e: 'MNPそのものに、dカードは不要。dカードお支払割の条件は、dカードの保有で、MNPの手続きとは別。' },
+      { c: 5, a: true, q: 'スマホデビューU15とU22割は、同じ子供に、同時に重複して登録できる。', e: 'U15とU22は、同一利用者への登録が可能。申込時に、子の本人確認書類が必要。' },
+      { c: 5, a: false, q: 'Y!mobileの親子割（学生割引）を適用中の回線を、他社にMNPしても、残りの期間分の割引は、新しいキャリアで自動的に続く。', e: '他社の割引は、MNPのあとは続かない。残りの期間の割引を手放すことを、事前に必ず説明し、ドコモの新規特典・CBと比べて、判断してもらう。' },
+      { c: 5, a: true, q: 'iPhone17（MNP・新規）のカエドキは、1円（初回11円）だが、頭金16,500円（税込）が必要である。', e: 'iPhone17は、新規でも1円に対応するが、頭金が必要。iPhone16は、MNPのみで、頭金なし。' },
+      { c: 5, a: true, q: '特典利用料のある端末は、カエドキで返却しない場合に、特典利用料が発生する。', e: '返却が前提の特典価格なので、返却しない場合は、追加の費用が発生する。必ず説明する。' },
+      { c: 6, a: true, q: 'ドコモmini（4GB）は、光セット割・dカードGOLDお支払割・でんきセット割を適用すると、月額880円（税込）になる。', e: '2,750円 − 光セット割1,210円 − dカードGOLD 550円 − でんき110円 ＝ 880円。' },
+      { c: 6, a: true, q: 'ギガライトからドコモminiへのプラン変更は、ドコモ内の変更なので、MNPは不要である。', e: '同じキャリア内のプラン変更なので、MNP不要。積極的に、プランの見直しとして提案する。' },
+      { c: 6, a: false, q: '別居の家族を、ファミリー割引グループに追加するとき、家族確認書類（健康保険証・戸籍謄本など）は不要である。', e: '別居の家族の追加には、家族確認書類が必須。当日、書類があるかを、最初に確認する。' },
+      { c: 6, a: true, q: '13歳の子を、スマホデビューU15に変更するには、親が、ドコモMAX・ポイ活MAX・ahamoのいずれかであることが条件である。', e: '親子割（U15）の適用のために、親がこの3プランのいずれかを契約している必要がある。' },
+      { c: 6, a: true, q: 'ドコモでんきのセット割（▲110円/回線）は、ファミリー割引グループ内の、すべての対象回線に適用される。', e: 'でんきのペア回線が1つあれば、グループ内の対象プラン（MAX・ポイ活MAX・mini等）の各回線に、▲110円。' },
+      { c: 6, a: false, q: 'au PAYゴールドカードを、dカードGOLDに切り替える提案では、年会費の差額の説明は不要である。', e: '年会費は、どちらも11,000円だが、特典内容・還元率とあわせて、比較して説明するのが必須。CB10,000円だけを訴求しない。' },
+      { c: 7, a: true, q: '9歳の子は、スマホデビューU15プラン（5〜15歳が対象）の対象である。', e: '5歳以上15歳以下の範囲内。親子割と合わせて、858円〜。' },
+      { c: 7, a: true, q: 'カエドキの返却プログラム中（残42回）の端末は、MNPしても、端末の残債は消えない。', e: 'MNPしても残債は消えず、残り42回分の支払いが続く。' },
+      { c: 7, a: true, q: 'SoftBank光からドコモ光への切り替えは、事業者変更（事変）で、工事不要である。', e: '同じフレッツ回線を使う事変なら、工事不要。解約金と切替のタイミングを、先に確認する。ただし、SB発番からNTT発番に変わるため、固定電話の番号が変わる場合がある。' },
+      { c: 7, a: true, q: 'dカードGOLD（年会費11,000円）を新規で申し込むと、審査の完了後に、CB10,000円を受け取れる。', e: 'ポイ活MAXと組み合わせると、dポイントの還元率も、最大化できる。' },
+      { c: 7, a: false, q: '夫婦2人ともdカードGOLDに切り替えれば、年会費（11,000円×2）を上回るメリットが、必ずある。', e: '利用額が少ないと、年会費を上回らないこともある。月の利用額や還元率を踏まえて、個別に試算し、CBだけを訴求しない。' }
+    ]
+  };
+
+  ['sbym', 'docomo'].forEach(function (v) {
+    var counter = {};
+    ITEMS[v].forEach(function (it) {
+      counter[it.c] = (counter[it.c] || 0) + 1;
+      it.id = v + '-c' + it.c + '-' + counter[it.c];
+    });
+  });
+
+  /* ---------- 日付 ---------- */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function fmt(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function today() { return fmt(new Date()); }
+  function addDays(s, n) {
+    var p = s.split('-');
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12, 0, 0);
+    d.setDate(d.getDate() + n);
+    return fmt(d);
+  }
+
+  /* ---------- 保存 ---------- */
+  function fresh() { return { ver: 'sbym', items: { sbym: {}, docomo: {} }, gate: {}, perfect: { sbym: [], docomo: [] }, morning: {} }; }
+  function load() {
+    try {
+      var raw = window.localStorage.getItem(KEY);
+      if (!raw) return fresh();
+      var o = JSON.parse(raw);
+      var f = fresh();
+      f.ver = o.ver === 'docomo' ? 'docomo' : 'sbym';
+      f.items = o.items || f.items;
+      f.items.sbym = f.items.sbym || {};
+      f.items.docomo = f.items.docomo || {};
+      f.gate = o.gate || {};
+      f.perfect = o.perfect || f.perfect;
+      f.perfect.sbym = f.perfect.sbym || [];
+      f.perfect.docomo = f.perfect.docomo || [];
+      f.morning = o.morning || {};
+      return f;
+    } catch (e) { return fresh(); }
+  }
+  var S = load();
+  function save() { try { window.localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 保存できない環境では、記録は残らない */ } }
+
+  /* ---------- 部品 ---------- */
+  function el(tag, props) {
+    var n = document.createElement(tag);
+    var i;
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        if (k === 'class') n.className = props[k];
+        else if (k === 'text') n.textContent = props[k];
+        else if (k.indexOf('on') === 0) n.addEventListener(k.slice(2), props[k]);
+        else n.setAttribute(k, props[k]);
+      });
+    }
+    for (i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c === null || c === undefined || c === false) continue;
+      n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return n;
+  }
+  function shuffle(a) {
+    var b = a.slice(), i, j, t;
+    for (i = b.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = b[i]; b[i] = b[j]; b[j] = t; }
+    return b;
+  }
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function facets(states, size) {
+    var svg = document.createElementNS(SVGNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 120 120');
+    svg.setAttribute('width', size);
+    svg.setAttribute('height', size);
+    svg.setAttribute('role', 'img');
+    var okCount = states.filter(function (s) { return s === 'ok'; }).length;
+    svg.setAttribute('aria-label', '今日の5問：' + okCount + '問正解');
+    var cx = 60, cy = 64, r = 50, pts = [], k;
+    for (k = 0; k < 5; k++) {
+      var ang = (-90 + k * 72) * Math.PI / 180;
+      pts.push([cx + r * Math.cos(ang), cy + r * Math.sin(ang)]);
+    }
+    for (k = 0; k < 5; k++) {
+      var a = pts[k], b = pts[(k + 1) % 5];
+      var poly = document.createElementNS(SVGNS, 'polygon');
+      poly.setAttribute('points', cx + ',' + cy + ' ' + a[0].toFixed(1) + ',' + a[1].toFixed(1) + ' ' + b[0].toFixed(1) + ',' + b[1].toFixed(1));
+      var st = states[k] || 'n';
+      poly.setAttribute('fill', st === 'ok' ? 'var(--accent)' : (st === 'ng' ? 'var(--ng)' : 'var(--facet-empty)'));
+      poly.setAttribute('stroke', 'var(--bg)');
+      poly.setAttribute('stroke-width', '3');
+      poly.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(poly);
+    }
+    return svg;
+  }
+
+  /* ---------- 状態の計算 ---------- */
+  function items() { return ITEMS[S.ver]; }
+  function stOf(id) { return S.items[S.ver][id]; }
+  function boxOf(id) { var s = stOf(id); return s ? s.b : 0; }
+  function isDue(id) { var s = stOf(id); return !!s && s.due <= today(); }
+  function grade(id, correct) {
+    var t = today();
+    var s = S.items[S.ver][id] || { b: 0, n: 0 };
+    var before = s.b;
+    if (correct) { s.b = Math.min(4, s.b + 1); s.due = addDays(t, INTERVALS[s.b]); }
+    else { s.b = 0; s.due = addDays(t, 1); }
+    s.n = (s.n || 0) + 1;
+    S.items[S.ver][id] = s;
+    save();
+    return { before: before, after: s.b };
+  }
+  function gateAchieved(date) { var g = S.gate[date]; return !!(g && g[S.ver] && g[S.ver].ok >= 4); }
+  function gateStreak() {
+    var cur = today(), cnt = 0;
+    if (!gateAchieved(cur)) cur = addDays(cur, -1);
+    while (gateAchieved(cur)) { cnt++; cur = addDays(cur, -1); }
+    return cnt;
+  }
+  function recordGate(ok) {
+    var t = today();
+    S.gate[t] = S.gate[t] || {};
+    var prev = S.gate[t][S.ver];
+    if (!prev || ok > prev.ok) S.gate[t][S.ver] = { ok: ok, n: 4 };
+    save();
+  }
+  function pickMorningItem() {
+    var list = shuffle(items());
+    var due = list.filter(function (it) { return isDue(it.id) || !stOf(it.id); });
+    var pool = due.length ? due : list;
+    pool.sort(function (a, b) { return boxOf(a.id) - boxOf(b.id); });
+    return pool[0];
+  }
+
+  /* ---------- セッション ---------- */
+  var VIEW = 'home';
+  var SES = null;
+  var notice = '';
+
+  function start(mode, caseNo) {
+    var steps = [], list;
+    if (mode === 'morning') {
+      steps = shuffle(GATE[S.ver]).map(function (g) { return { type: 'gate', g: g }; });
+      steps.push({ type: 'quiz', it: pickMorningItem() });
+    } else if (mode === 'gate') {
+      steps = shuffle(GATE[S.ver]).map(function (g) { return { type: 'gate', g: g }; });
+    } else if (mode === 'all') {
+      steps = shuffle(items()).map(function (it) { return { type: 'quiz', it: it }; });
+    } else if (mode === 'case') {
+      steps = shuffle(items().filter(function (it) { return it.c === caseNo; })).map(function (it) { return { type: 'quiz', it: it }; });
+    } else if (mode === 'review') {
+      list = items().filter(function (it) { var s = stOf(it.id); return s && (s.b <= 1 || s.due <= today()); });
+      steps = shuffle(list).slice(0, 15).map(function (it) { return { type: 'quiz', it: it }; });
+    }
+    if (!steps.length) { notice = mode === 'review' ? '復習する問題は、まだありません。先に、罠クイズを解いてください。' : '問題が見つかりません。'; VIEW = 'home'; render(); return; }
+    SES = { mode: mode, caseNo: caseNo, steps: steps, i: 0, res: [], phase: 'q', t0: Date.now(), fast: false, info: null };
+    VIEW = 'play';
+    render();
+  }
+  function finish() {
+    var gOk = 0, gN = 0, qOk = 0, qN = 0;
+    SES.res.forEach(function (r) {
+      if (r.type === 'gate') { gN++; if (r.ok) gOk++; } else { qN++; if (r.ok) qOk++; }
+    });
+    SES.sum = { gOk: gOk, gN: gN, qOk: qOk, qN: qN };
+    if (SES.mode === 'morning' || SES.mode === 'gate') recordGate(gOk);
+    if (SES.mode === 'morning') {
+      var t = today();
+      S.morning[t] = S.morning[t] || {};
+      S.morning[t][S.ver] = SES.res.map(function (r) { return r.ok ? 'ok' : 'ng'; });
+      save();
+    }
+    if (SES.mode === 'all' && qN > 0 && qOk === qN) {
+      var d = today();
+      if (S.perfect[S.ver].indexOf(d) < 0) { S.perfect[S.ver].push(d); save(); }
+    }
+    VIEW = 'result';
+    render();
+  }
+  function next() {
+    SES.i++;
+    if (SES.i >= SES.steps.length) { finish(); return; }
+    SES.phase = 'q'; SES.t0 = Date.now(); SES.fast = false; SES.info = null;
+    render();
+  }
+
+  /* ---------- 画面 ---------- */
+  function copyText(text, btn) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); btn.textContent = 'コピーしました'; } catch (e) { btn.textContent = 'コピーできませんでした'; }
+      document.body.removeChild(ta);
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { btn.textContent = 'コピーしました'; }, fallback);
+        return;
+      }
+    } catch (e) { /* 次の方法で試す */ }
+    fallback();
+  }
+  var resetArmed = false;
+
+  function viewHome() {
+    var t = today();
+    var m = S.morning[t] && S.morning[t][S.ver];
+    var states = m || [];
+    var list = items();
+    var seen = list.filter(function (it) { return !!stOf(it.id); });
+    var dueN = seen.filter(function (it) { return isDue(it.id); }).length;
+    var perfect = Math.min(S.perfect[S.ver].length, 2);
+    var streak = Math.min(gateStreak(), 3);
+    var counts = [0, 0, 0, 0, 0];
+    seen.forEach(function (it) { counts[boxOf(it.id)]++; });
+    var colors = ['var(--r0)', 'var(--r1)', 'var(--r2)', 'var(--r3)', 'var(--r4)'];
+
+    var wrap = el('div');
+    wrap.appendChild(el('div', { class: 'hero' },
+      facets(states, 132),
+      el('h1', { text: m ? '今日の5問は、完了しました' : '毎朝の5問' }),
+      el('p', { text: m ? 'もう一度やると、別の問題が出ます。' : 'Gate1の4問と、罠クイズ1問。5分で終わります。' })
+    ));
+    var seg = el('div', { class: 'seg', role: 'group', 'aria-label': '版を選ぶ' });
+    ['sbym', 'docomo'].forEach(function (v) {
+      seg.appendChild(el('button', { type: 'button', 'aria-pressed': S.ver === v ? 'true' : 'false', text: LABEL[v], onclick: function () { S.ver = v; save(); notice = ''; render(); } }));
+    });
+    wrap.appendChild(seg);
+    if (notice) wrap.appendChild(el('p', { class: 'hint', text: notice, role: 'status' }));
+    wrap.appendChild(el('button', { class: 'cta', type: 'button', text: m ? '朝の5問を、もう一度やる' : '朝の5問を始める', onclick: function () { notice = ''; start('morning'); } }));
+    wrap.appendChild(el('div', { class: 'menu' },
+      menuBtn('Gate1だけ（5秒ドリル）', 'ロープレテストの口頭試問4問を、5秒で答える', function () { start('gate'); }),
+      menuBtn('罠クイズ（全' + list.length + '問）', '満点を、別の日に2回取る', function () { start('all'); }),
+      menuBtn('ケース別に解く', '案内テストのケースごとに、○×を解く', function () { VIEW = 'cases'; render(); }),
+      menuBtn('間違えた問題・復習', '間違えた問題と、復習の日が来た問題（最大15問）', function () { start('review'); })
+    ));
+    wrap.appendChild(el('div', { class: 'stats' },
+      stat(perfect >= 2, perfect + ' / 2回', '罠クイズの満点（別の日）'),
+      stat(streak >= 3, streak + ' / 3日', 'Gate1が4/4の連続'),
+      stat(false, dueN + '問', '復習の日が来た問題')
+    ));
+    var lad = el('div', { class: 'ladder' });
+    RANKS.forEach(function (r, i) {
+      var rung = el('div', { class: 'rung' }, el('b', { text: String(counts[i]) }), el('small', { text: r }));
+      rung.style.setProperty('--c', colors[i]);
+      lad.appendChild(rung);
+    });
+    wrap.appendChild(el('div', { class: 'section' },
+      el('h2', { text: '石の磨き具合' }),
+      el('p', { text: '正解するたびに、石が一段磨かれます。間違えると、原石に戻ります。復習は、1日後・3日後・7日後・14日後に出ます。' }),
+      lad,
+      el('p', { class: 'fresh', text: 'まだ解いていない問題：' + (list.length - seen.length) + '問' })
+    ));
+    var foot = el('div', { class: 'foot' },
+      el('p', { text: '出典：案内テスト 講師・採点者用マニュアル（2026年10月版）、クローザーロープレ 運営・採点マニュアル。料金・制度・施策は変わります。現行の案内テスト資料と食い違うときは、案内テスト資料を正としてください。記録は、この端末のブラウザに保存されます。' })
+    );
+    var rb = el('button', { class: 'link', type: 'button', text: '記録を消す', onclick: function () {
+      if (!resetArmed) { resetArmed = true; rb.textContent = '本当に消す（もう一度押す）'; setTimeout(function () { resetArmed = false; rb.textContent = '記録を消す'; }, 4000); return; }
+      resetArmed = false; var v = S.ver; S = fresh(); S.ver = v; save(); notice = '記録を消しました。'; render();
+    } });
+    foot.appendChild(rb);
+    wrap.appendChild(foot);
+    return wrap;
+  }
+  function menuBtn(title, sub, fn) {
+    return el('button', { type: 'button', onclick: fn }, el('strong', { text: title }), el('span', { text: sub }));
+  }
+  function stat(done, big, small) {
+    return el('div', { class: 'stat' + (done ? ' done' : '') }, el('b', { text: big }), el('small', { text: small }));
+  }
+
+  function viewCases() {
+    var wrap = el('div');
+    wrap.appendChild(el('div', { class: 'top' },
+      el('button', { class: 'link', type: 'button', text: '← 戻る', onclick: function () { VIEW = 'home'; render(); } }),
+      el('span', { class: 'step', text: LABEL[S.ver] })
+    ));
+    wrap.appendChild(el('h2', { text: 'ケースを選ぶ' }));
+    var box = el('div', { class: 'cases' });
+    Object.keys(CASES[S.ver]).forEach(function (k) {
+      var n = Number(k);
+      var cnt = items().filter(function (it) { return it.c === n; }).length;
+      var label = (n === 0 ? '' : 'ケース' + n + '｜') + CASES[S.ver][k];
+      box.appendChild(el('button', { type: 'button', onclick: function () { start('case', n); } }, el('span', { text: label }), el('em', { text: cnt + '問' })));
+    });
+    wrap.appendChild(box);
+    return wrap;
+  }
+
+  function topBar() {
+    var n = SES.steps.length;
+    return el('div', { class: 'top' },
+      el('button', { class: 'link', type: 'button', text: '← やめる', onclick: function () { VIEW = 'home'; SES = null; render(); } }),
+      el('span', { class: 'step', text: (SES.i + 1) + ' / ' + n })
+    );
+  }
+
+  function viewPlay() {
+    var s = SES.steps[SES.i];
+    var wrap = el('div');
+    wrap.appendChild(topBar());
+    if (s.type === 'gate') return playGate(wrap, s);
+    return playQuiz(wrap, s);
+  }
+
+  function playGate(wrap, s) {
+    var card = el('div', { class: 'card' });
+    card.appendChild(el('p', { class: 'tag', text: 'Gate1　' + LABEL[S.ver] }));
+    card.appendChild(el('p', { class: 'q', text: s.g.q }));
+    if (SES.phase === 'q') {
+      card.appendChild(el('div', { class: 'timer', 'aria-hidden': 'true' }, el('i')));
+      card.appendChild(el('p', { class: 'hint', text: '5秒以内に、声に出して答えてから、「答えを見る」を押します。' }));
+      wrap.appendChild(card);
+      wrap.appendChild(el('button', { class: 'btn primary wide', type: 'button', text: '答えを見る', onclick: function () {
+        SES.fast = (Date.now() - SES.t0) <= 5200;
+        SES.phase = 'a'; render();
+      } }));
+      return wrap;
+    }
+    card.appendChild(el('div', { class: 'timer stopped', 'aria-hidden': 'true' }, el('i')));
+    card.appendChild(el('div', { class: 'answer-box', text: s.g.a }));
+    wrap.appendChild(card);
+    if (!SES.fast) {
+      wrap.appendChild(el('p', { class: 'hint', style: 'margin-top:12px', text: '5秒を超えたので、「言えなかった」として記録します。' }));
+      wrap.appendChild(el('button', { class: 'btn primary wide', type: 'button', text: '次へ', onclick: function () { SES.res.push({ type: 'gate', ok: false }); next(); } }));
+    } else {
+      wrap.appendChild(el('p', { class: 'hint', style: 'margin-top:12px', text: '5秒以内に、答えの内容を、声に出して言えましたか？' }));
+      wrap.appendChild(el('div', { class: 'row2' },
+        el('button', { class: 'btn primary', type: 'button', text: '言えた', onclick: function () { SES.res.push({ type: 'gate', ok: true }); next(); } }),
+        el('button', { class: 'btn', type: 'button', text: '言えなかった', onclick: function () { SES.res.push({ type: 'gate', ok: false }); next(); } })
+      ));
+    }
+    return wrap;
+  }
+
+  function playQuiz(wrap, s) {
+    var it = s.it;
+    var card = el('div', { class: 'card' });
+    card.appendChild(el('p', { class: 'tag', text: (it.c === 0 ? '' : 'ケース' + it.c + '｜') + CASES[S.ver][it.c] }));
+    card.appendChild(el('p', { class: 'q', text: it.q }));
+    wrap.appendChild(card);
+    if (SES.phase === 'q') {
+      wrap.appendChild(el('div', { class: 'answers' },
+        el('button', { class: 'ans', type: 'button', 'aria-label': '正しい', onclick: function () { answer(it, true); } }, el('b', { text: '○' }), '正しい'),
+        el('button', { class: 'ans', type: 'button', 'aria-label': '誤り', onclick: function () { answer(it, false); } }, el('b', { text: '×' }), '誤り')
+      ));
+      return wrap;
+    }
+    var ok = SES.info.ok;
+    var fb = el('div', { class: 'fb ' + (ok ? 'ok' : 'ng'), role: 'status' },
+      el('h3', { text: ok ? '正解です' : '不正解です' }),
+      el('p', { text: '答え：' + (it.a ? '○（正しい）' : '×（誤り）') }),
+      el('p', { text: it.e }),
+      el('p', { class: 'rank', text: ok ? 'この石は、' + RANKS[SES.info.before] + (SES.info.after > SES.info.before ? ' → ' + RANKS[SES.info.after] + ' に磨かれました。' : ' のままです（最上位）。') : 'この石は、原石に戻りました。明日、もう一度出ます。' })
+    );
+    wrap.appendChild(fb);
+    wrap.appendChild(el('button', { class: 'btn primary wide', type: 'button', text: SES.i + 1 >= SES.steps.length ? '結果を見る' : '次へ', onclick: next }));
+    return wrap;
+  }
+  function answer(it, choice) {
+    var ok = (choice === it.a);
+    var g = grade(it.id, ok);
+    SES.info = { ok: ok, before: g.before, after: g.after };
+    SES.res.push({ type: 'quiz', ok: ok, it: it });
+    SES.phase = 'a';
+    render();
+  }
+
+  function viewResult() {
+    var m = SES.mode, sum = SES.sum;
+    var total = sum.gN + sum.qN, ok = sum.gOk + sum.qOk;
+    var wrap = el('div');
+    wrap.appendChild(el('div', { class: 'top' }, el('span', { class: 'step', text: LABEL[S.ver] }), el('span')));
+    var states = SES.res.slice(0, 5).map(function (r) { return r.ok ? 'ok' : 'ng'; });
+    var hero = el('div', { class: 'hero' });
+    if (m === 'morning') hero.appendChild(facets(states, 132));
+    hero.appendChild(el('div', { class: 'sum' }, el('b', { text: ok + ' / ' + total }), el('span', { text: '問 正解' })));
+    wrap.appendChild(hero);
+
+    var lines = [];
+    if (sum.gN) lines.push('Gate1：' + sum.gOk + ' / ' + sum.gN + (sum.gOk >= 4 ? '　全問、5秒以内に言えました' : ''));
+    if (sum.qN) lines.push('罠クイズ：' + sum.qOk + ' / ' + sum.qN);
+    var status = el('div', { class: 'card' });
+    lines.forEach(function (l) { status.appendChild(el('p', { text: l })); });
+    if (m === 'all' && sum.qOk === sum.qN) status.appendChild(el('p', { text: '満点です。別の日にも、もう一度満点を取ると、2回達成です（いまの満点：' + Math.min(S.perfect[S.ver].length, 2) + ' / 2回）。' }));
+    if (m === 'gate' || m === 'morning') status.appendChild(el('p', { class: 'hint', text: 'Gate1が4/4の連続：' + Math.min(gateStreak(), 3) + ' / 3日' }));
+    wrap.appendChild(status);
+
+    var wrong = SES.res.filter(function (r) { return r.type === 'quiz' && !r.ok; });
+    if (wrong.length) {
+      wrap.appendChild(el('h2', { style: 'margin-top:22px;font-size:16px', text: '間違えた問題' }));
+      var wl = el('div', { class: 'wrong-list' });
+      wrong.forEach(function (r) {
+        wl.appendChild(el('div', { class: 'wrong-item' }, el('small', { text: (r.it.c === 0 ? '' : 'ケース' + r.it.c + '｜') + CASES[S.ver][r.it.c] }), r.it.q, el('small', { text: '答え：' + (r.it.a ? '○' : '×') + '　' + r.it.e })));
+      });
+      wrap.appendChild(wl);
+    }
+
+    var text;
+    if (m === 'morning') text = '朝の5問（' + LABEL[S.ver] + '）：Gate1 ' + sum.gOk + '/' + sum.gN + '、罠クイズ ' + (sum.qOk ? '○' : '×') + '（合計 ' + ok + '/' + total + '）';
+    else if (m === 'gate') text = 'Gate1ドリル（' + LABEL[S.ver] + '）：' + sum.gOk + '/' + sum.gN;
+    else text = '罠クイズ（' + LABEL[S.ver] + (m === 'case' ? '・ケース' + SES.caseNo : '') + '）：' + sum.qOk + '/' + sum.qN;
+    var cb = el('button', { class: 'btn wide', type: 'button', text: '日報に貼る文をコピー', onclick: function () { copyText(text, cb); } });
+    wrap.appendChild(el('div', { class: 'copybox', text: text }));
+    wrap.appendChild(cb);
+    wrap.appendChild(el('button', { class: 'btn primary wide', type: 'button', text: 'ホームへ', onclick: function () { VIEW = 'home'; SES = null; render(); } }));
+    return wrap;
+  }
+
+  function render() {
+    var app = document.getElementById('app');
+    while (app.firstChild) app.removeChild(app.firstChild);
+    var node;
+    if (VIEW === 'play' && SES) node = viewPlay();
+    else if (VIEW === 'result' && SES) node = viewResult();
+    else if (VIEW === 'cases') node = viewCases();
+    else node = viewHome();
+    app.appendChild(node);
+    window.scrollTo(0, 0);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
