@@ -54,7 +54,7 @@ select,button,textarea{font:inherit}select{width:100%;padding:10px;border:1px so
 
       <div id="caseSummary" class="meta" style="margin-top:14px"></div>
       <div class="rule"><b>練習モード</b><br>顧客役の返答後に短いコーチFBあり。正解や最終着地は先に教えません。</div>
-      <div class="rule"><b>本番模擬</b><br>途中ヒントなし。終了後に100点満点＋一発アウト＋着地判定を返します。採点は全項目で根拠発言を必須にします。</div>
+      <div class="rule"><b>本番模擬</b><br>途中ヒントなし。終了後に12点満点＋一発アウト＋着地判定を返します。</div>
 
       <div class="toolbar">
         <button onclick="restart()">↻ 最初から</button>
@@ -79,7 +79,7 @@ select,button,textarea{font:inherit}select{width:100%;padding:10px;border:1px so
 </div>
 <script>
 const API='https://docomopractice102026-ai.vercel.app/api/coach';
-let mode='practice', history=[], listening=false, recognition=null, micStartedAt=0, pendingVoiceDuration=null;
+let mode='practice', history=[], listening=false, recognition=null;
 
 const CASES={
   docomo:{
@@ -158,65 +158,15 @@ const CASES={
   }
 };
 
-const GLOBAL_RUBRIC={
-  version:'ORIPULA Roleplay Rubric v2',
-  scoringRule:'各項目を0/1/2で判定。0=確認できる証拠なし・逆行行動あり、1=一部確認できるが浅い/不十分、2=明確な証拠があり顧客反応または次の提案に反映。各項目は必ず会話中の根拠発言を引用または要約して示す。証拠がない場合は推測加点禁止。',
-  passRules:{
-    total:'総合75点以上',
-    knowledge:'A 知識・正確性が24/30以上',
-    redCard:'一発アウトなし',
-    landing:'顧客合意のある有効着地が成立していること',
-    exemption:'各ケースの最高着地条件を満たし、一発アウトなし、総合75点以上、A24点以上で案内テスト免除候補'
-  },
-  sections:[
-    {id:'A',name:'知識・正確性',max:30,items:[
-      {id:'A1',max:6,label:'料金・GB・プランの正確性',anchor0:'重大な誤り、または根拠なく断定',anchor1:'概ね正しいが条件・例外・金額の一部が曖昧',anchor2:'顧客条件に合わせて正確に説明'},
-      {id:'A2',max:6,label:'端末・返却プログラムの正確性',anchor0:'残債や返却条件を誤案内',anchor1:'概略は正しいが条件確認が不足',anchor2:'残債・返却時期・施策条件を正確に整理'},
-      {id:'A3',max:6,label:'光回線の手続き種別と費用',anchor0:'事変/解新など重大な誤案内',anchor1:'種別は正しいが費用・工事・番号等の確認不足',anchor2:'種別・工事・電話・費用を正確に案内'},
-      {id:'A4',max:6,label:'メール・カード・電気・施策条件',anchor0:'重要条件や費用を誤案内/隠す',anchor1:'主要点は正しいが一部抜け',anchor2:'必要な条件・費用・期限を正確に案内'},
-      {id:'A5',max:6,label:'名義・必要書類・登録引継ぎ',anchor0:'契約不能につながる誤り',anchor1:'確認はしたが不足あり',anchor2:'名義・書類・登録条件まで正確に確認'}
-    ]},
-    {id:'B',name:'ヒアリング・課題形成',max:20,items:[
-      {id:'B1',max:5,label:'現状把握の網羅性',anchor0:'主要情報をほぼ取れていない',anchor1:'携帯中心で一部不足',anchor2:'携帯・端末・光・電気・メール等を必要十分に把握'},
-      {id:'B2',max:5,label:'質問の深掘り',anchor0:'表面的な質問だけ',anchor1:'理由確認はあるが提案に未反映',anchor2:'回答→理由→背景まで深掘りし提案に反映'},
-      {id:'B3',max:5,label:'課題の顧客合意',anchor0:'営業側が勝手に課題認定',anchor1:'課題提示はしたが顧客合意が弱い',anchor2:'顧客本人の言葉で課題認識を取れている'},
-      {id:'B4',max:5,label:'ニーズ優先順位の見極め',anchor0:'不要商材を一方的に押す',anchor1:'ニーズは捉えるが優先順位が曖昧',anchor2:'夫婦それぞれの決定軸を分けて優先順位化'}
-    ]},
-    {id:'C',name:'関係構築・会話運用',max:20,items:[
-      {id:'C1',max:5,label:'夫婦双方の巻き込み',anchor0:'片方を長時間放置',anchor1:'両方に話すが片方の意思確認が浅い',anchor2:'夫婦それぞれに質問・確認し両者の意思を提案に反映'},
-      {id:'C2',max:5,label:'受容・プライド保全',anchor0:'顧客を否定/論破しにいく',anchor1:'否定はしないが受容が形式的',anchor2:'一度受け止めた上で比較・選択肢提示へつなぐ'},
-      {id:'C3',max:5,label:'説明量・ターンテイク',anchor0:'一方的な長話が継続',anchor1:'やや長いが途中確認あり',anchor2:'短く区切り質問・理解確認を挟む。音声時は発話時間も根拠化'},
-      {id:'C4',max:5,label:'理解確認・反応適応',anchor0:'顧客反応を無視して進む',anchor1:'確認はするが定型的',anchor2:'顧客の反応に応じて説明量・言い方・順序を変える'}
-    ]},
-    {id:'D',name:'提案・アウト返し',max:20,items:[
-      {id:'D1',max:5,label:'提案の個別最適化',anchor0:'全員に同じ提案',anchor1:'一部個別化',anchor2:'夫婦の利用量・端末・価値観に合わせて提案を分ける'},
-      {id:'D2',max:5,label:'数字と価値の接続',anchor0:'安い/お得だけで押す',anchor1:'数字は出すが意味づけが弱い',anchor2:'月額・手間・端末価値を本人のニーズに接続'},
-      {id:'D3',max:5,label:'反論処理の手順',anchor0:'即反論・否定・押し切り',anchor1:'共感または理由確認のどちらかのみ',anchor2:'受容→理由確認→解決策→確認の順で処理'},
-      {id:'D4',max:5,label:'妻の感情ブロック処理',anchor0:'妻を無視/強引に押す',anchor1:'共感はするが不安解消が弱い',anchor2:'手間・不安を具体化しサポートと選択肢で解消'}
-    ]},
-    {id:'E',name:'クロージング・着地',max:10,items:[
-      {id:'E1',max:5,label:'テストクロージングと最終意思確認',anchor0:'意思確認なし/曖昧に終了',anchor1:'どちらか一方または弱い確認',anchor2:'途中テスクロ＋夫婦双方の最終意思確認'},
-      {id:'E2',max:5,label:'着地の質',anchor0:'ニーズ無視・未成約・不適切着地',anchor1:'有効着地だが取り切り/納得形成が弱い',anchor2:'ニーズに沿った有効着地で夫婦双方が納得'}
-    ]}
-  ],
-  telemetryRules:{
-    wifeNeglect:'妻への質問・確認・合意形成が長時間途絶えた場合はC1減点。実時間が取得できる場合は3分以上をレッドカード候補。',
-    monologue:'音声入力で1回30秒超かつ理解確認なしを長話候補として記録。2回でレッドカード候補。文字入力のみの場合、文字数だけで一発アウトにはしない。',
-    evidence:'全採点項目で根拠発言必須。根拠を示せない項目は0点。',
-    nonverbalScope:'現行版で評価するのは発話時間・話の長さ・ターンテイク等の会話運用。声色・抑揚・表情・目線は音声/映像解析導入までは採点対象外。'
-  }
-};
-
 function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function current(){return CASES[document.getElementById('carrier').value]}
-function currentPayload(){return Object.assign({},current(),{rubric:GLOBAL_RUBRIC})}
 function setMode(m){mode=m;document.getElementById('practiceBtn').classList.toggle('on',m==='practice');document.getElementById('examBtn').classList.toggle('on',m==='exam');restart()}
-function renderCase(){const c=current();document.getElementById('caseSummary').innerHTML='<b>'+esc(c.label)+'</b><br>'+esc(c.summary)+'<br><br><b>お客様情報はAI内部に保持</b><br>販売員が質問した範囲だけ開示されます。<br><br><b>正式採点：100点</b><br>A 知識30 / B ヒアリング20 / C 会話運用20 / D 提案20 / E クロージング10<br><span style="color:#b26a00">合格：75点以上＋知識24/30以上＋一発アウトなし</span>';restart()}
+function renderCase(){const c=current();document.getElementById('caseSummary').innerHTML='<b>'+esc(c.label)+'</b><br>'+esc(c.summary)+'<br><br><b>お客様情報はAI内部に保持</b><br>販売員が質問した範囲だけ開示されます。';restart()}
 function add(role,text){const row=document.createElement('div');row.className='msg '+(role==='user'?'user':'ai');const b=document.createElement('div');b.className='bubble';if(role!=='user'){const w=document.createElement('div');w.className='who';w.textContent='お客様';b.appendChild(w)}const d=document.createElement('div');d.textContent=text;b.appendChild(d);row.appendChild(b);const chat=document.getElementById('chat');chat.appendChild(row);chat.scrollTop=chat.scrollHeight}
 function restart(){history=[];document.getElementById('chat').innerHTML='';document.getElementById('scoreBox').classList.add('hidden');document.getElementById('scoreBox').textContent='';add('ai',mode==='practice'?'練習モードを開始します。私は夫婦のお客様役です。実際の現場と同じように、最初の声掛けから始めてください。':'本番模擬を開始します。途中のヒントはありません。最初の声掛けから始めてください。')}
-async function send(){const input=document.getElementById('input');const text=input.value.trim();if(!text)return;input.value='';add('user',text);const meta={source:pendingVoiceDuration!==null?'voice':'text',durationSec:pendingVoiceDuration,charCount:text.length};history.push({role:'user',content:text,meta:meta});pendingVoiceDuration=null;const btn=document.getElementById('sendBtn');btn.disabled=true;document.getElementById('status').textContent='AI顧客が回答中…';try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'roleplay-turn',practiceMode:mode,message:text,history,caseConfig:currentPayload()})});const data=await r.json();if(!r.ok)throw new Error(data.detail||data.error||('API '+r.status));const reply=data.reply||'返答を取得できませんでした。';history.push({role:'assistant',content:reply});add('ai',reply)}catch(e){add('ai','AI接続エラー：'+e.message+'\n管理者側のAI接続を確認してください。')}finally{btn.disabled=false;document.getElementById('status').textContent='準備完了'}}
-async function finishRoleplay(){if(history.length<2){alert('もう少しロープレを進めてから採点してください。');return}document.getElementById('status').textContent='採点中…';try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'roleplay-grade',history,caseConfig:currentPayload()})});const data=await r.json();if(!r.ok)throw new Error(data.detail||data.error||('API '+r.status));const box=document.getElementById('scoreBox');box.textContent=data.reply||'採点結果を取得できませんでした。';box.classList.remove('hidden')}catch(e){const box=document.getElementById('scoreBox');box.textContent='採点APIエラー：'+e.message;box.classList.remove('hidden')}finally{document.getElementById('status').textContent='準備完了'}}
-function initMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('micBtn').disabled=true;document.getElementById('micBtn').textContent='音声入力非対応';return}recognition=new SR();recognition.lang='ja-JP';recognition.continuous=true;recognition.interimResults=true;let final='';recognition.onstart=()=>{listening=true;micStartedAt=Date.now();pendingVoiceDuration=null;final=document.getElementById('input').value.trim();document.getElementById('micBtn').textContent='⏹ 音声入力停止'};recognition.onresult=e=>{let inter='',add='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)add+=t;else inter+=t}if(add)final+=(final?' ':'')+add;document.getElementById('input').value=(final+(inter?' '+inter:'')).trim()};recognition.onend=()=>{if(micStartedAt){pendingVoiceDuration=Math.max(0,Math.round((Date.now()-micStartedAt)/1000));micStartedAt=0;}listening=false;document.getElementById('micBtn').textContent='🎙 音声入力'};recognition.onerror=()=>{listening=false;document.getElementById('micBtn').textContent='🎙 音声入力'}}
+async function send(){const input=document.getElementById('input');const text=input.value.trim();if(!text)return;input.value='';add('user',text);history.push({role:'user',content:text});const btn=document.getElementById('sendBtn');btn.disabled=true;document.getElementById('status').textContent='AI顧客が回答中…';try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'roleplay-turn',practiceMode:mode,message:text,history,caseConfig:current()})});const data=await r.json();if(!r.ok)throw new Error(data.detail||data.error||('API '+r.status));const reply=data.reply||'返答を取得できませんでした。';history.push({role:'assistant',content:reply});add('ai',reply)}catch(e){add('ai','AI接続エラー：'+e.message+'\n管理者側のAI接続を確認してください。')}finally{btn.disabled=false;document.getElementById('status').textContent='準備完了'}}
+async function finishRoleplay(){if(history.length<2){alert('もう少しロープレを進めてから採点してください。');return}document.getElementById('status').textContent='採点中…';try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'roleplay-grade',history,caseConfig:current()})});const data=await r.json();if(!r.ok)throw new Error(data.detail||data.error||('API '+r.status));const box=document.getElementById('scoreBox');box.textContent=data.reply||'採点結果を取得できませんでした。';box.classList.remove('hidden')}catch(e){const box=document.getElementById('scoreBox');box.textContent='採点APIエラー：'+e.message;box.classList.remove('hidden')}finally{document.getElementById('status').textContent='準備完了'}}
+function initMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('micBtn').disabled=true;document.getElementById('micBtn').textContent='音声入力非対応';return}recognition=new SR();recognition.lang='ja-JP';recognition.continuous=true;recognition.interimResults=true;let final='';recognition.onstart=()=>{listening=true;final=document.getElementById('input').value.trim();document.getElementById('micBtn').textContent='⏹ 音声入力停止'};recognition.onresult=e=>{let inter='',add='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)add+=t;else inter+=t}if(add)final+=(final?' ':'')+add;document.getElementById('input').value=(final+(inter?' '+inter:'')).trim()};recognition.onend=()=>{listening=false;document.getElementById('micBtn').textContent='🎙 音声入力'};recognition.onerror=()=>{listening=false;document.getElementById('micBtn').textContent='🎙 音声入力'}}
 function toggleMic(){if(!recognition)initMic();if(!recognition)return;if(listening)recognition.stop();else{try{recognition.start()}catch(e){}}}
 document.getElementById('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
 renderCase();
