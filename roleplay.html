@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ORIPULA ロープレ対策AI</title>
+<style>
+:root{--red:#cc0000;--blue:#1677ff;--ink:#20242a;--muted:#6f7782;--bg:#f6f7f9;--card:#fff;--line:#e5e7eb;--ok:#11875d;--warn:#b26a00}
+*{box-sizing:border-box}body{margin:0;font-family:"Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;gap:12px}
+header b{font-size:17px}.pill{font-size:11px;background:var(--red);color:#fff;padding:4px 9px;border-radius:999px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px}.hero{display:flex;gap:14px;align-items:stretch;flex-wrap:wrap;margin-bottom:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.grow{flex:1;min-width:280px}
+h1{font-size:22px;margin:0 0 8px}.sub{color:var(--muted);font-size:13px;line-height:1.7}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}.panel-title{font-size:13px;font-weight:700;margin-bottom:10px}
+select,button,textarea{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.mode button,.action{border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-weight:700}
+.mode button{background:#f0f2f5;color:#4b5563}.mode button.on{background:#111827;color:#fff}.action{background:var(--red);color:#fff}.ghost{background:#fff!important;color:#444!important;border:1px solid var(--line)!important}
+.meta{font-size:12px;color:var(--muted);line-height:1.7}.rule{font-size:12px;background:#fafafa;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px}
+.chat{height:56vh;min-height:430px;overflow-y:auto;background:#fbfbfc;border:1px solid var(--line);border-radius:12px;padding:14px}.msg{display:flex;margin-bottom:12px}.msg.user{justify-content:flex-end}.bubble{max-width:82%;padding:11px 13px;border-radius:13px;white-space:pre-wrap;line-height:1.65;font-size:14px}.ai .bubble{background:#fff;border:1px solid var(--line)}.user .bubble{background:#111827;color:#fff}.who{font-size:10px;color:var(--muted);font-weight:700;margin-bottom:3px}
+.inputrow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}.inputrow textarea{min-height:70px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:11px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.toolbar button{padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.score{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px;font-size:13px;white-space:pre-wrap;line-height:1.7}
+.status{font-size:11px;color:var(--muted);margin-left:auto}
+.hidden{display:none}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.chat{height:50vh}.wrap{padding:12px}.bubble{max-width:92%}}
+</style>
+</head>
+<body>
+<header><span class="pill">ORIPULA</span><b>ロープレ対策AI</b><span class="status" id="status">準備完了</span></header>
+<div class="wrap">
+  <div class="hero">
+    <div class="card grow">
+      <h1>クローザーロープレ対策</h1>
+      <div class="sub">AIが夫・妻のお客様役を演じます。質問された情報だけを開示し、受容・ヒアリング・提案・アウト返し・クロージングまで実戦形式で練習します。</div>
+    </div>
+    <div class="card" style="min-width:260px">
+      <div class="panel-title">モード</div>
+      <div class="mode"><button id="practiceBtn" class="on" onclick="setMode('practice')">練習</button><button id="examBtn" onclick="setMode('exam')">本番模擬</button></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <aside class="card">
+      <div class="panel-title">キャリア</div>
+      <select id="carrier" onchange="renderCase()">
+        <option value="docomo">docomo獲得</option>
+        <option value="sbym">SoftBank / Y!mobile獲得</option>
+      </select>
+      <div class="panel-title" style="margin-top:14px">顧客ケース</div>
+      <select id="caseSelect" onchange="renderCase()">
+        <option value="main">夫婦・子どもなし</option>
+      </select>
+
+      <div id="caseSummary" class="meta" style="margin-top:14px"></div>
+      <div class="rule"><b>練習モード</b><br>顧客役の返答後に短いコーチFBあり。正解や最終着地は先に教えません。</div>
+      <div class="rule"><b>本番模擬</b><br>途中ヒントなし。終了後に12点満点＋一発アウト＋着地判定を返します。</div>
+
+      <div class="toolbar">
+        <button onclick="restart()">↻ 最初から</button>
+        <button onclick="finishRoleplay()">採点する</button>
+      </div>
+      <div class="score hidden" id="scoreBox"></div>
+    </aside>
+
+    <main class="card">
+      <div class="panel-title">ロープレ会話</div>
+      <div class="chat" id="chat"></div>
+      <div class="inputrow">
+        <textarea id="input" placeholder="販売員として話しかけてください。例：本日はお二人でお買い物ですか？"></textarea>
+        <button class="action" id="sendBtn" onclick="send()">送信</button>
+      </div>
+      <div class="toolbar">
+        <button id="micBtn" onclick="toggleMic()">🎙 音声入力</button>
+        <button class="ghost" onclick="document.getElementById('input').value=''">入力クリア</button>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const API='https://docomopractice102026-ai.vercel.app/api/coach';
+let mode='practice', history=[], listening=false, recognition=null;
+
+const CASES={
+  docomo:{
+    label:'docomo獲得',
+    summary:'SoftBank利用中の夫婦。料金・端末・光・でんきの見直しを提案するケース。',
+    customer:{
+      household:'夫婦・子どもなし／アパート',
+      home:'SoftBank光1ギガ（固定TELあり・未使用／光テレビなし）・SoftBankでんき（2021年〜）',
+      husband:{
+        carrier:'SoftBank',plan:'メリハリ無制限＋',usage:'28〜33GB',fee:'5,368円',device:'iPhone15 128GB・1年半・バッテリー90％・4年分割中',deviceFee:'3,125円',
+        traits:'論理思考・関係値を作りにくい・まとめていることで安いと思っている・@i.softbank.com利用',
+        belief:'ショップスタッフから2年目返却が最も得と聞いており、それが正しいと思っている'
+      },
+      wife:{
+        carrier:'SoftBank',plan:'ミニフィットプラン＋',usage:'3GB',fee:'4,378円',device:'iPhone13 128GB・2021年12月・バッテリー82％・完済',
+        traits:'価格より手間重視・旦那を尊重するが嫌なことは嫌・感情寄り・関係値を作りやすい',
+        belief:'高く買って完済したので壊れるまで変える必要はない'
+      },
+      expectedNeeds:['料金ニーズ（低）','端末ニーズ（高）'],
+      landings:[
+        '① ahamo夫＋ドコモmini4GB妻＋ドコモ光事変＋dカードGOLD夫＋ドコモでんき',
+        '② ahamo夫＋ドコモmini4GB妻＋ドコモ光',
+        '③ ahamo×2'
+      ],
+      campaign:'iPhone16カエドキ1円×2・光・でんき、またはSIMのみ×2',
+      special:'①着地＋一発アウト回避で案内テスト免除＋クローザー合格。②③はロープレ合格なら案内テスト合格扱い＋クローザー合格。',
+      behavior:'夫は論理的に納得できない限り折れない。妻を置いてけぼりにすると最後に感情でブロック。知ったかぶりで営業側のプロ感を試す。説明が長すぎる場合も評価を下げる。'
+    },
+    scoring:{
+      redCards:['妻を3分以上放置','30秒以上の一方的トークを2回','夫の知識やプライドを真っ向否定','重要費用やメール等の誤案内・説明漏れ'],
+      items:[
+        '夫の30GB前後に対する過剰コストを課題化','妻3GBで4,378円の割高感を課題化','妻端末の状態を尊重しつつ今変える利点を説明','未使用固定電話等を把握',
+        '条件が合えば今日見直すか夫婦双方にテスクロ','夫は数字/論理・妻は安心/手間で投げ分け','各ブロックで理解確認',
+        '夫の2年返却信奉を受容して前倒し返却＋施策で解消','妻の端末変更拒否を共感＋サポートで解消','光/でんき/まとめの不安を総額で解消',
+        '逃げずに最終クロージング','名義・必要書類・条件を正確に引継ぎ'
+      ]
+    }
+  },
+  sbym:{
+    label:'SoftBank / Y!mobile獲得',
+    summary:'au利用中の夫婦。端末・料金・auひかり・電気をSoftBank/Y!mobileへ見直すケース。',
+    customer:{
+      household:'夫婦・子どもなし／アパート',
+      home:'auひかり1ギガ（固定TELあり・未使用／光テレビなし）・東京電力（2021年〜）',
+      husband:{
+        carrier:'au',plan:'使い放題MAX＋',usage:'28〜33GB',fee:'5,368円',device:'iPhone12 64GB・3年半・バッテリー76％',deviceFee:'3,125円',
+        traits:'端末ニーズが顕著・au歴が長く抵抗あり・論理思考・関係値を作りにくい・@ezweb.com利用',
+        belief:'まとめていることで安いと思っている'
+      },
+      wife:{
+        carrier:'au',plan:'スマホミニプラン＋',usage:'3GB',fee:'4,597円',device:'iPhone13 128GB・2021年12月・バッテリー82％・完済',
+        traits:'手間重視・旦那を尊重するが嫌なことは嫌・感情寄り・関係値を作りやすい',
+        belief:'高く買って完済したので壊れるまで変える必要はない'
+      },
+      expectedNeeds:['料金ニーズ（低）','端末ニーズ（高／夫は低難度）'],
+      landings:[
+        '① Y!mobile 3M夫SIM＋3S妻SIM＋SoftBank光解新＋ゴールド夫＋おうちでんき',
+        '①’ SoftBank夫端末＋Y!mobile妻＋光＋でんき＋ゴールド',
+        '①’’ SoftBank夫端末＋SoftBank妻端末＋光＋でんき＋ゴールド',
+        '② Y!mobile夫婦端末＋光＋ゴールド＋でんき',
+        '③ Y!mobile 3M夫＋3S妻'
+      ],
+      campaign:'iPhone16カエドキ1円×2・光・でんき、またはSIMのみ×2',
+      special:'①系着地＋一発アウト回避で案内テスト免除＋クローザー合格。②③はロープレ合格なら案内テスト合格扱い＋クローザー合格。',
+      behavior:'関係値・プロ感がなければ乗り換えない。夫は論理納得必須。妻を置いてけぼりにすると最後に感情ブロック。知ったかぶりでプロ感を試す。説明過多も減点。'
+    },
+    scoring:{
+      redCards:['妻を3分以上放置','30秒以上の一方的トークを2回','au長期利用を真っ向否定','auひかりを事業者変更と誤案内','重要費用やメール等の説明漏れ'],
+      items:[
+        '夫端末状態と端末変更ニーズを明確化','妻3GBで4,597円の割高感を課題化','妻端末を尊重しつつ今変える利点を説明','auひかり固定電話・東京電力を把握',
+        '条件が合えば今日見直すか夫婦双方にテスクロ','夫は論理/数字/端末・妻は安心/手間で投げ分け','各ブロックで理解確認',
+        '夫のau愛着・メール不安を受容して解消','妻の端末変更拒否・移行面倒を共感＋サポートで解消','auひかり/電気/まとめの不安を総額で解消',
+        '逃げずに最終クロージング','名義・必要書類・解約新規条件を正確に引継ぎ'
+      ]
+    }
+  }
+};
+
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function current(){return CASES[document.getElementById('carrier').value]}
+function setMode(m){mode=m;document.getElementById('practiceBtn').classList.toggle('on',m==='practice');document.getElementById('examBtn').classList.toggle('on',m==='exam');restart()}
+function renderCase(){const c=current();document.getElementById('caseSummary').innerHTML='<b>'+esc(c.label)+'</b><br>'+esc(c.summary)+'<br><br><b>お客様情報はAI内部に保持</b><br>販売員が質問した範囲だけ開示されます。';restart()}
+function add(role,text){const row=document.createElement('div');row.className='msg '+(role==='user'?'user':'ai');const b=document.createElement('div');b.className='bubble';if(role!=='user'){const w=document.createElement('div');w.className='who';w.textContent='お客様';b.appendChild(w)}const d=document.createElement('div');d.textContent=text;b.appendChild(d);row.appendChild(b);const chat=document.getElementById('chat');chat.appendChild(row);chat.scrollTop=chat.scrollHeight}
+function restart(){history=[];document.getElementById('chat').innerHTML='';document.getElementById('scoreBox').classList.add('hidden');document.getElementById('scoreBox').textContent='';add('ai',mode==='practice'?'練習モードを開始します。私は夫婦のお客様役です。実際の現場と同じように、最初の声掛けから始めてください。':'本番模擬を開始します。途中のヒントはありません。最初の声掛けから始めてください。')}
+async function send(){const input=document.getElementById('input');const text=input.value.trim();if(!text)return;input.value='';add('user',text);history.push({role:'user',content:text});const btn=document.getElementById('sendBtn');btn.disabled=true;document.getElementById('status').textContent='AI顧客が回答中…';try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'roleplay-turn',practiceMode:mode,message:text,history,caseConfig:current()})});const data=await r.json();if(!r.ok)throw new Error(data.detail||data.error||('API '+r.status));const reply=data.reply||'返答を取得できませんでした。';history.push({role:'assistant',content:reply});add('ai',reply)}catch(e){add('ai','AI接続エラー：'+e.message+'\n管理者側のAI接続を確認してください。')}finally{btn.disabled=false;document.getElementById('status').textContent='準備完了'}}
+async function finishRoleplay(){if(history.length<2){alert('もう少しロープレを進めてから採点してください。');return}document.getElementById('status').textContent='採点中…';try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'roleplay-grade',history,caseConfig:current()})});const data=await r.json();if(!r.ok)throw new Error(data.detail||data.error||('API '+r.status));const box=document.getElementById('scoreBox');box.textContent=data.reply||'採点結果を取得できませんでした。';box.classList.remove('hidden')}catch(e){const box=document.getElementById('scoreBox');box.textContent='採点APIエラー：'+e.message;box.classList.remove('hidden')}finally{document.getElementById('status').textContent='準備完了'}}
+function initMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('micBtn').disabled=true;document.getElementById('micBtn').textContent='音声入力非対応';return}recognition=new SR();recognition.lang='ja-JP';recognition.continuous=true;recognition.interimResults=true;let final='';recognition.onstart=()=>{listening=true;final=document.getElementById('input').value.trim();document.getElementById('micBtn').textContent='⏹ 音声入力停止'};recognition.onresult=e=>{let inter='',add='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)add+=t;else inter+=t}if(add)final+=(final?' ':'')+add;document.getElementById('input').value=(final+(inter?' '+inter:'')).trim()};recognition.onend=()=>{listening=false;document.getElementById('micBtn').textContent='🎙 音声入力'};recognition.onerror=()=>{listening=false;document.getElementById('micBtn').textContent='🎙 音声入力'}}
+function toggleMic(){if(!recognition)initMic();if(!recognition)return;if(listening)recognition.stop();else{try{recognition.start()}catch(e){}}}
+document.getElementById('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+renderCase();
+</script>
+</body>
+</html>
